@@ -91,5 +91,5 @@ static char* extractNameFromCommand(char* command) {
             lastForwardSlash = x;
         }
     }
-    return substring(command, 1, x+1);
+    return substring(command, x+1, strlen(command)-(x+1));
 }

@@ -1,8 +1,11 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#define PORT 8080
+#include "socket/SocketFactory.h"
+
 int main(int argc, char const *argv[])
 {
+    socketInit();
+    handleConnections();
     return 0;
 }
