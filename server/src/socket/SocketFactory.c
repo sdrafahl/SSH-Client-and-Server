@@ -49,8 +49,5 @@ int handleConnections() {
         } else {
             close(newsockfd);
         }
-
-
-
     }
 }
