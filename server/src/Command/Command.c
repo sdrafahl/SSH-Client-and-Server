@@ -13,8 +13,8 @@ static char* extractNameFromCommand(char* command);
 
 struct CommandStruct {
     char* command;
-    char* flags[];
-}
+    char** flags;
+};
 
 Command* newCommand(char* commandString) {
     Command* command = malloc(sizeof(Command));
@@ -23,7 +23,7 @@ Command* newCommand(char* commandString) {
     for(x=0;x<lengthOfCommandString;x++) {
         if(commandString[x] == ' ') {
             command->command = substring(commandString, 1, x+1);
-            command->flags = createListOfCommands(substring(commandString, x+1, lengthOfCommandString));
+            command->flags = createListOfCommands(substring(commandString, x+1, lengthOfCommandString), extractNameFromCommand(command->command));
         }
     }
     free(commandString);
@@ -32,13 +32,13 @@ Command* newCommand(char* commandString) {
 
 int execute(Command* command) {
     execv(command->command, command->flags);
+    return 0;
 }
 
-int freeCommand(*Command command) {
+int freeCommand(Command* command) {
     free(command->command);
     char** commandFlags = command->flags;
-    int memmoryIncramentor = 0;
-    while(**commandFlags != NULL) {
+    while(commandFlags != NULL) {
         free(*commandFlags);
         commandFlags++;
     }
@@ -67,12 +67,12 @@ static char** createListOfCommands(char* substringOfCommands, char* commandName)
     int countFlag = 0;
     char** flags = calloc(strlen(substringOfCommands)+1, sizeof(char*));
     int flagMemmoryIncramentor = 0;
-    **flags = commandName;
+    *flags = commandName;
     int x;
     for(x=1;x<strlen(substringOfCommands);x++) {
         if(substringOfCommands[x] == ' ' && !countFlag) {
             countFlag = 1;
-            **(flags+flagMemmoryIncramentor) = substring(substringOfCommands, 1, x+1);
+            *(flags+flagMemmoryIncramentor) = substring(substringOfCommands, 1, x+1);
             flagMemmoryIncramentor++;
         }
         if(substringOfCommands[x] != ' ') {
@@ -87,9 +87,9 @@ static char* extractNameFromCommand(char* command) {
     int x;
     int lastForwardSlash = 0;
     for(x=0;x<strlen(command);x++) {
-        if(command == '/') {
+        if(command[x] == '/') {
             lastForwardSlash = x;
         }
     }
-    return substring(command, x+1, strlen(command)-(x+1));
+    return substring(command, lastForwardSlash+1, strlen(command)-(lastForwardSlash+1));
 }

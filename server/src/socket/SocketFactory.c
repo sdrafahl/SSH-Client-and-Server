@@ -4,11 +4,14 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <sys/types.h>
+  #include <sys/wait.h>
 
-#include "../Command/Command.h";
+#include "../Command/Command.h"
 
-int sockfd, newsockfd, portno, clilen;
-int link[2];
+int sockfd, newsockfd, portno;
+socklen_t clilen;
+int link_[2];
 char pipeBuffer[4096];
 struct sockaddr_in serv_addr, cli_addr;
 
@@ -21,7 +24,7 @@ int socketInit() {
       exit(1);
    }
 
-   if(pipe(link)==-1) {
+   if(pipe(link_)==-1) {
        exit(EXIT_FAILURE);
    }
 
@@ -52,9 +55,9 @@ int handleConnections() {
             exit(1);
         }
         if(!fork()) {
-            dup2 (link[1], STDOUT_FILENO);
-            close(link[0]);
-            close(link[1]);
+            dup2 (link_[1], STDOUT_FILENO);
+            close(link_[0]);
+            close(link_[1]);
             close(sockfd);
             char socketBuffer[4096];
             bzero(socketBuffer, 4096);
@@ -62,13 +65,13 @@ int handleConnections() {
             Command* command = newCommand(socketBuffer);
             execute(command);
             freeCommand(command);
-            exit();
+            exit(0);
         } else {
             close(newsockfd);
-            close(link[1]);
-            int bytes = read(link[0],pipeBuffer, sizeof(pipeBuffer));
-            printf("Output: (%.*s)\n", bytes, pipeBuffer);
+            close(link_[1]);
             wait(NULL);
+            int bytes = read(link_[0],pipeBuffer, sizeof(pipeBuffer));
+            printf("Output: (%.*s)\n", bytes, pipeBuffer);
         }
     }
 }
