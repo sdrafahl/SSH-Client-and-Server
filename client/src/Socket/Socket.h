@@ -3,5 +3,6 @@
 
 int sendMessage(char* message);
 int setupSocket();
+int readFromSocket();
 
 #endif
