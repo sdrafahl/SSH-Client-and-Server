@@ -13,36 +13,31 @@ static char* extractNameFromCommand(char* command);
 
 struct CommandStruct {
     char* command;
-    char** flags;
 };
 
 Command* newCommand(char* commandString) {
+    printf("Command String: %s", commandString);
     Command* command = malloc(sizeof(Command));
     int x;
     int lengthOfCommandString = strlen(commandString);
     for(x=0;x<lengthOfCommandString;x++) {
         if(commandString[x] == ' ') {
-            command->command = substring(commandString, 1, x+1);
-            command->flags = createListOfCommands(substring(commandString, x+1, lengthOfCommandString), extractNameFromCommand(command->command));
+            command->command = commandString;
         }
     }
-    free(commandString);
     return command;
 }
 
-int execute(Command* command) {
-    execv(command->command, command->flags);
-    return 0;
+char* execute(Command* command) {
+      FILE* file = popen(command->command, "r");
+      char buffer[100];
+      while(fgets(buffer, 100, file)) {
+        printf("%s", buffer);
+      }
+      return buffer;
 }
 
 int freeCommand(Command* command) {
-    free(command->command);
-    char** commandFlags = command->flags;
-    while(commandFlags != NULL) {
-        free(*commandFlags);
-        commandFlags++;
-    }
-    free(commandFlags);
     free(command);
     return 0;
 }

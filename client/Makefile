@@ -1,5 +1,5 @@
 csrc = $(wildcard src/*.c) \
-       $(wildcard src/Messages/*.c) \
+       $(wildcard src/Socket/*.c) \
 
 LDFLAGS = -Wall -ggdb
 

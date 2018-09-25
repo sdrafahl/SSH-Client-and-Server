@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
-#define PORT 8080
+
+#include "Socket.h"
+#define PORT 8062
 
 struct sockaddr_in address;
 int sock = 0, valread;
@@ -15,7 +17,7 @@ int sendMessage(char* message) {
   return 0;
 }
 
-int setup() {
+int setupSocket() {
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
       printf("\n Socket creation error \n");

@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <sys/types.h>
-  #include <sys/wait.h>
+#include <sys/wait.h>
 
 #include "../Command/Command.h"
 
@@ -29,7 +29,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 5001;
+   portno = 8062;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -51,13 +51,18 @@ int handleConnections() {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 
         if (newsockfd < 0) {
-            perror("ERROR on accept");
+            printf("Error Connecting");
+            perror("ERROR on accept \n");
             exit(1);
         }
-        if(!fork()) {
-            dup2 (link_[1], STDOUT_FILENO);
-            close(link_[0]);
-            close(link_[1]);
+        int pid = fork();
+
+        if(pid < 0) {
+          perror("ERROR on fork \n");
+          exit(1);
+        }
+
+        if(pid == 0) {
             close(sockfd);
             char socketBuffer[4096];
             bzero(socketBuffer, 4096);
@@ -65,13 +70,8 @@ int handleConnections() {
             Command* command = newCommand(socketBuffer);
             execute(command);
             freeCommand(command);
-            exit(0);
         } else {
             close(newsockfd);
-            close(link_[1]);
-            wait(NULL);
-            int bytes = read(link_[0],pipeBuffer, sizeof(pipeBuffer));
-            printf("Output: (%.*s)\n", bytes, pipeBuffer);
         }
     }
 }

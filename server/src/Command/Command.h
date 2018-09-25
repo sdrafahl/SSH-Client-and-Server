@@ -4,6 +4,6 @@
 typedef struct CommandStruct Command;
 Command* newCommand(char* commandString);
 int freeCommand(Command* command);
-int execute(Command* command);
+char* execute(Command* command);
 
 #endif
