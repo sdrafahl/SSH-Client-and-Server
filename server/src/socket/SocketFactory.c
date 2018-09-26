@@ -30,7 +30,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 8068;
+   portno = 9003;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -64,21 +64,27 @@ int handleConnections() {
         }
 
         if(pid == 0) {
+            printf("Enter child process \n");
             struct pollfd pfd;
             pfd.fd = newsockfd;
           	pfd.events = POLLIN | POLLHUP | POLLRDNORM;
           	pfd.revents = 0;
             close(sockfd);
+            char* message = malloc(sizeof(char) * 100);
+            strcpy(message, "Test \n");
+            printf("Testing, I got here \n");
             while(1) {
               if(poll(&pfd, 1, 100) > 0) {
-                char socketBuffer[50];
-                bzero(socketBuffer, 50);
-                if(probeSocket(newsockfd) || recv(newsockfd, socketBuffer, 50, MSG_DONTWAIT) == 0) {
+                char socketBuffer[500];
+                bzero(socketBuffer, 500);
+                if(probeSocket(newsockfd, message) || recv(newsockfd, socketBuffer, 500, MSG_DONTWAIT) == 0) {
                   printf("Socket Closed \n");
+                  free(message);
                   exit(0);
                 }
                 Command* command = newCommand(socketBuffer);
-                execute(command);
+                strcpy(message, execute(command));
+                printf("Message: %s \n", message);
                 freeCommand(command);
               }
             }
@@ -88,8 +94,8 @@ int handleConnections() {
     }
 }
 
-int probeSocket(int socket) {
-  char message[] = "status";
+int probeSocket(int socket, char* message) {
+  printf("message in probe: %s \n", message);
   if(send(socket, message, strlen(message), 0) >= 0) {
     return 0;
   }

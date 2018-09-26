@@ -16,7 +16,6 @@ struct CommandStruct {
 };
 
 Command* newCommand(char* commandString) {
-    printf("Command String: %s", commandString);
     Command* command = malloc(sizeof(Command));
     int x;
     int lengthOfCommandString = strlen(commandString);
@@ -29,11 +28,11 @@ Command* newCommand(char* commandString) {
 }
 
 char* execute(Command* command) {
+      printf("Command String: %s\n", command->command);
       FILE* file = popen(command->command, "r");
       char buffer[100];
-      while(fgets(buffer, 100, file)) {
-        printf("%s", buffer);
-      }
+      fgets(buffer, 100, file);
+      printf("Buffer: %s \n", buffer);
       return buffer;
 }
 

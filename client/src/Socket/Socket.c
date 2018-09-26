@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "Socket.h"
-#define PORT 8068
+#define PORT 9003
 
 struct sockaddr_in address;
 int sock = 0, valread;
@@ -19,7 +19,7 @@ int sendMessage(char* message) {
 
 int readFromSocket() {
   char message[50];
-  read(sock, message, strlen(message), 0);
+  recv(sock, message, 50, 0);
   printf("Response: %s \n", message);
 }
 
