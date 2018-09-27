@@ -5,10 +5,20 @@
 
 int main(int argc, char const *argv[])
 {
-    char message[100];
-    setupSocket();
+    char message[3000];
+    char portMessage[6];
+    char ipMessage[20];
+    printf("Please Enter The IP Address you would like to connect to? \n");
+    fgets(ipMessage, sizeof ipMessage, stdin);
+    printf("Please Enter The Port You would like to connect to? \n");
+    fgets(portMessage, sizeof portMessage, stdin);
+    setupSocket(ipMessage , atoi(portMessage));
+    int initialServerResponse = 0;
     while(1) {
-      printf("Please Enter a command: \n");
+      if(!initialServerResponse) {
+        readFromSocket();
+        initialServerResponse = 1;
+      }
       fgets(message, sizeof message, stdin);
       sendMessage(message);
       readFromSocket();

@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <errno.h>
 
 #include "Socket.h"
-#define PORT 9003
+
+int removeSpaces(char *str)
 
 struct sockaddr_in address;
 int sock = 0, valread;
@@ -13,17 +15,21 @@ struct sockaddr_in serv_addr;
 char buffer[1024] = {0};
 
 int sendMessage(char* message) {
-  send(sock, message, strlen(message), 0);
+  send(sock, message, strlen(message),0 );
   return 0;
 }
 
 int readFromSocket() {
-  char message[50];
-  recv(sock, message, 50, 0);
+  char* message = malloc(sizeof(char) * 3000);
+  if(recv(sock, message, 3000, 0) == -1) {
+    printf("recv error: %s \n", strerror(errno), errno);
+  }
   printf("Response: %s \n", message);
+  strcpy(message, "");
+  free(message);
 }
 
-int setupSocket() {
+int setupSocket(char* ipMessage , int port) {
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
       printf("\n Socket creation error \n");
@@ -31,8 +37,12 @@ int setupSocket() {
   }
   memset(&serv_addr, '0', sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(PORT);
-  if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)
+  serv_addr.sin_port = htons(port);
+  if(strcmp("localhost", ipMessage)) {
+    strcpy(ipMessage, "127.0.0.1");
+  }
+  removeSpaces(ipMessage);
+  if(inet_pton(AF_INET, ipMessage, &serv_addr.sin_addr)<=0)
   {
       printf("\nInvalid address/ Address not supported \n");
       return -1;
@@ -45,4 +55,13 @@ int setupSocket() {
   }
   printf("Connected \n");
   return 0;
+}
+
+int removeSpaces(char *str) {
+    int count = 0;
+    for (int i = 0; str[i]; i++)
+        if (str[i] != ' ')
+            str[count++] = str[i];
+    str[count] = '\0';
+    return 0;
 }

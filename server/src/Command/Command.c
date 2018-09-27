@@ -17,23 +17,18 @@ struct CommandStruct {
 
 Command* newCommand(char* commandString) {
     Command* command = malloc(sizeof(Command));
-    int x;
-    int lengthOfCommandString = strlen(commandString);
-    for(x=0;x<lengthOfCommandString;x++) {
-        if(commandString[x] == ' ') {
-            command->command = commandString;
-        }
-    }
+    command->command = commandString;
     return command;
 }
 
 char* execute(Command* command) {
-      printf("Command String: %s\n", command->command);
       FILE* file = popen(command->command, "r");
-      char buffer[100];
-      fgets(buffer, 100, file);
-      printf("Buffer: %s \n", buffer);
-      return buffer;
+      char response[1000];
+      char buffer[3000];
+      while(fgets(buffer, 3000, file)) {
+        strcat(response, buffer);
+      }
+      return response;
 }
 
 int freeCommand(Command* command) {
