@@ -24,7 +24,7 @@ int readFromSocket() {
   if(recv(sock, message, 3000, 0) == -1) {
     printf("recv error: %s \n", strerror(errno), errno);
   }
-  printf("Response: %s \n", message);
+  printf("shell> %s \n", message);
   strcpy(message, "");
   free(message);
 }

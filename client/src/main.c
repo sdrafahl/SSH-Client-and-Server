@@ -19,7 +19,11 @@ int main(int argc, char const *argv[])
         readFromSocket();
         initialServerResponse = 1;
       }
+      printf("shell>");
       fgets(message, sizeof message, stdin);
+      if(strcmp(message, "quit")) {
+        exit(0);
+      }
       sendMessage(message);
       readFromSocket();
     }
