@@ -19,9 +19,10 @@ int main(int argc, char const *argv[])
         readFromSocket();
         initialServerResponse = 1;
       }
-      printf("shell>");
+      printf("shell> ");
       fgets(message, sizeof message, stdin);
-      if(strcmp(message, "quit")) {
+      if(!strcmp(message, "quit\n")) {
+        printf("%s \n", message);
         exit(0);
       }
       sendMessage(message);

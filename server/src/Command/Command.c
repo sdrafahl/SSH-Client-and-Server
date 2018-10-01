@@ -10,6 +10,7 @@
 static char *substring(char *string, int position, int length);
 static char** createListOfCommands(char* substringOfCommands, char* commandName);
 static char* extractNameFromCommand(char* command);
+char* ExecuteAndReturnString(const char *command, const char *type);
 
 struct CommandStruct {
     char* command;
@@ -21,14 +22,30 @@ Command* newCommand(char* commandString) {
     return command;
 }
 
+char* ExecuteAndReturnString(const char *command, const char *type) {
+    int fds[2];
+    const char *argv[4] = {"/bin/sh", "-c", command};
+    pipe(fds);
+    if (fork() == 0) {
+        close(STDOUT_FILENO);
+        dup(fds[1]);
+        close(fds[0]);
+        close(fds[1]);
+        execvp(argv[0], argv);
+        perror("execvp of ls failed");
+        exit(0);
+    }
+    wait(0);
+    char msg[3000];
+    read(fds[0], msg, 3000);
+    close(fds[0]);
+    close(fds[1]);
+    return msg;
+}
+
 char* execute(Command* command) {
-      FILE* file = popen(command->command, "r");
-      char response[1000];
-      char buffer[3000];
-      while(fgets(buffer, 3000, file)) {
-        strcat(response, buffer);
-      }
-      return response;
+      char* message = ExecuteAndReturnString(command->command, "r");
+      return message;
 }
 
 int freeCommand(Command* command) {

@@ -7,7 +7,7 @@
 
 #include "Socket.h"
 
-int removeSpaces(char *str)
+int removeSpaces(char *str);
 
 struct sockaddr_in address;
 int sock = 0, valread;
