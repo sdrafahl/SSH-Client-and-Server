@@ -21,13 +21,13 @@ int sendMessage(char* message) {
 }
 
 int readFromSocket() {
-  char* message = malloc(sizeof(char) * 3000);
   char* size[10];
   if(recv(sock, size, 10, 0) == -1) {
     printf("recv error: %s \n", strerror(errno), errno);
   }
+  char* message = malloc(sizeof(char) * atoi(size));
   printf("Size: %s \n", size);
-  if(recv(sock, message, 3000, 0) == -1) {
+  if(recv(sock, message, atoi(size), 0) == -1) {
     printf("recv error: %s \n", strerror(errno), errno);
   }
   printf("shell> %s \n", message);

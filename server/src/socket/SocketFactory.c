@@ -32,7 +32,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 3780;
+   portno = 3456;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -82,14 +82,20 @@ int handleConnections() {
               if(poll(&pfd, 1, 100) > 0) {
                 char socketBuffer[3000];
                 bzero(socketBuffer, 3000);
+
                 if(recv(newsockfd, &socketBuffer, 3000, MSG_DONTWAIT) == 0) {
                   printf("Socket Closed \n");
                   exit(0);
                 }
-                Command* command = newCommand(socketBuffer);
-                strcpy(message, execute(command));
-                probeSocket(newsockfd, message);
-                freeCommand(command);
+                printf("Read : %s \n", socketBuffer);
+                if(socketBuffer[0] == '\n') {
+                  probeSocket(newsockfd, "Connected To Server \n");
+                } else {
+                  Command* command = newCommand(socketBuffer);
+                  strcpy(message, execute(command));
+                  probeSocket(newsockfd, message);
+                  freeCommand(command);
+                }
               }
             }
         } else {
