@@ -1,5 +1,5 @@
 #ifndef CommandHeader
-# define CommandHeard
+# define CommandHeader
 
 typedef struct CommandStruct Command;
 Command* newCommand(char* commandString);

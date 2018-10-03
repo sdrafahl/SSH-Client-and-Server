@@ -32,7 +32,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 9013;
+   portno = 3780;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -66,13 +66,17 @@ int handleConnections() {
         }
 
         if(pid == 0) {
+            int sentConnectedMessage = 0;
             struct pollfd pfd;
             pfd.fd = newsockfd;
           	pfd.events = POLLIN | POLLHUP | POLLRDNORM;
           	pfd.revents = 0;
             close(sockfd);
             char message[3000];
-            strcpy(message, "Connected to server....");
+            if(!sentConnectedMessage) {
+              strcpy(message, "Connected to server....");
+              sentConnectedMessage = 1;
+            }
             probeSocket(newsockfd, message);
             while(1) {
               if(poll(&pfd, 1, 100) > 0) {
@@ -98,6 +102,11 @@ int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
     strcpy(message, "Command Complete");
   }
+  int length = strlen(message);
+  char numberString[10];
+  sprintf(numberString, " %d", length);
+  printf("Going out: %s \n", message);
+  send(socket, numberString, 10, 0);
   if(send(socket, message, strlen(message), 0) >= 0) {
     return 0;
   }

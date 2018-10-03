@@ -15,16 +15,23 @@ struct sockaddr_in serv_addr;
 char buffer[1024] = {0};
 
 int sendMessage(char* message) {
-  send(sock, message, strlen(message),0 );
+  int length = strlen(message);
+  write(sock, message, length);
   return 0;
 }
 
 int readFromSocket() {
   char* message = malloc(sizeof(char) * 3000);
+  char* size[10];
+  if(recv(sock, size, 10, 0) == -1) {
+    printf("recv error: %s \n", strerror(errno), errno);
+  }
+  printf("Size: %s \n", size);
   if(recv(sock, message, 3000, 0) == -1) {
     printf("recv error: %s \n", strerror(errno), errno);
   }
   printf("shell> %s \n", message);
+  fflush(stdout);
   strcpy(message, "");
   free(message);
 }
