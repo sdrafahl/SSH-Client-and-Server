@@ -25,7 +25,9 @@ int main(int argc, char const *argv[])
         printf("%s \n", message);
         exit(0);
       }
-      sendMessage(message);
-      readFromSocket();
+      if(message[0] != 10) {
+        sendMessage(message);
+        readFromSocket();
+      }
     }
 }

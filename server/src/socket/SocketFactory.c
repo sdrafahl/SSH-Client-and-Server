@@ -32,7 +32,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 3456;
+   portno = 3000;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -87,13 +87,15 @@ int handleConnections() {
                   printf("Socket Closed \n");
                   exit(0);
                 }
-                printf("Read : %s \n", socketBuffer);
+                //printf("Read : %s \n", socketBuffer);
                 if(socketBuffer[0] == '\n') {
-                  probeSocket(newsockfd, "Connected To Server \n");
+                  //probeSocket(newsockfd, "Connected To Server \n");
                 } else {
                   Command* command = newCommand(socketBuffer);
-                  strcpy(message, execute(command));
+                  char* stdoutFromExec = execute(command);
+                  strcpy(message, stdoutFromExec);
                   probeSocket(newsockfd, message);
+                  free(stdoutFromExec);
                   freeCommand(command);
                 }
               }
@@ -111,7 +113,6 @@ int probeSocket(int socket, char* message) {
   int length = strlen(message);
   char numberString[10];
   sprintf(numberString, " %d", length);
-  printf("Going out: %s \n", message);
   send(socket, numberString, 10, 0);
   if(send(socket, message, strlen(message), 0) >= 0) {
     return 0;

@@ -2,7 +2,7 @@ csrc = $(wildcard src/*.c) \
        $(wildcard src/command/*.c) \
 	   $(wildcard src/socket/*.c) \
 
-LDFLAGS = -Wall -ggdb
+LDFLAGS = -Wall -ggdb -g
 
 SSH:
 	reset
