@@ -1,10 +1,10 @@
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "./Socket/Socket.h"
 
-#include "Socket/Socket.h"
-
-int main(int argc, char const *argv[])
-{
+int main() {
     char message[3000];
     char portMessage[6];
     char ipMessage[20];
@@ -12,7 +12,7 @@ int main(int argc, char const *argv[])
     fgets(ipMessage, sizeof ipMessage, stdin);
     printf("Please Enter The Port You would like to connect to? \n");
     fgets(portMessage, sizeof portMessage, stdin);
-    setupSocket(ipMessage , atoi(portMessage));
+    setupSocket(ipMessage, atoi(portMessage));
     int initialServerResponse = 0;
     while(1) {
       if(!initialServerResponse) {
@@ -30,4 +30,5 @@ int main(int argc, char const *argv[])
         readFromSocket();
       }
     }
+    return 0;
 }

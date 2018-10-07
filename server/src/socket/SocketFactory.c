@@ -32,7 +32,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 3000;
+   portno = 3007;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -93,9 +93,7 @@ int handleConnections() {
                 } else {
                   Command* command = newCommand(socketBuffer);
                   char* stdoutFromExec = execute(command);
-                  strcpy(message, stdoutFromExec);
-                  probeSocket(newsockfd, message);
-                  free(stdoutFromExec);
+                  probeSocket(newsockfd, stdoutFromExec);
                   freeCommand(command);
                 }
               }
@@ -108,7 +106,7 @@ int handleConnections() {
 
 int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
-    strcpy(message, "Command Complete");
+    strcpy(message, "Command Complete ");
   }
   int length = strlen(message);
   char numberString[10];

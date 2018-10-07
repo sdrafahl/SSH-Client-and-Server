@@ -5,15 +5,13 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 #include "Command.h"
 
 #define MSGSIZE 3000
 
-static char *substring(char *string, int position, int length);
-static char** createListOfCommands(char* substringOfCommands, char* commandName);
-static char* extractNameFromCommand(char* command);
-char** tokenize(char* command);
+char** tokenize(char* command, int* tokens);
 
 char inbuf[MSGSIZE];
 
@@ -22,12 +20,15 @@ struct CommandStruct {
 };
 
 Command* newCommand(char* commandString) {
-    Command* command = malloc(sizeof(Command));
+    Command* command = malloc(sizeof(Command*));
+    if(!command) {
+        printf("%s\n", "malloc failed at line 23 Command.c ");
+    }
     command->command = commandString;
     return command;
 }
 
-char** tokenize(char* command){
+char** tokenize(char* command, int* tokens){
   int numberOfTokens = 1;
   int length = strlen(command);
   int countedSpace = 0;
@@ -40,20 +41,33 @@ char** tokenize(char* command){
       countedSpace = 0;
     }
   }
-
-  char** args = malloc((sizeof(char*) * numberOfTokens) + 1);
-  char* token = strtok (command ," ");
+  char** args = malloc((sizeof(char) * (numberOfTokens + 1)));
+  if(!args) {
+      printf("%s\n", "malloc failed at line 44 Command.c ");
+  }
+  char* token = strtok(command ," ");
   int counter = 0;
   while (token != NULL)
   {
-    strcpy((args+counter), token);
+    args[counter] = token;
     token = strtok(NULL, " ");
     counter++;
   }
   counter++;
-  *(args+counter) = NULL;
-  printf("%s \n", args);
+  args[counter] = NULL;
+  *tokens = numberOfTokens;
   return args;
+}
+
+int removeNewLine(char* str) {
+    int counter = 0;
+    for(counter = 0;counter<strlen(str);counter++){
+        if(str[counter] == 10) {
+            str[counter] = '\0';
+            break;
+        }
+    }
+    return 0;
 }
 
 char* execute(Command* command) {
@@ -61,55 +75,51 @@ char* execute(Command* command) {
   if(command->command[0] == 10) {
     return command->command;
   }
-  //const char **argv = {"/bin/sh", "-c", command->command};
-
+  char msg[MSGSIZE];
   pipe(fds);
   fcntl(fds[0], F_SETFL, O_NONBLOCK); /*Non Blocking Pipe */
-  if (fork() == 0) {
-      char** args = tokenize(command->command);
-      printf("token 1 %s \n", args);
-      printf("token 2 %s \n", args+1);
-      char* commands[3];
-      printf("asdfasdf \n");
-      strcpy(commands[0], args);
-      printf("asdfasdf \n");
-      strcpy(commands[1], args+1);
-      printf("asdfasdf \n");
-      commands[2] = NULL;
-      close(STDOUT_FILENO);
-      close(fds[0]);
-      dup2(fds[1], STDOUT_FILENO);
-      dup2(fds[0], STDIN_FILENO);
+  int tokens;
+  char** args = tokenize(command->command, &tokens);
+
+  if(strcmp(args[0], "cd") == 0){
+      if(chdir(args[2]) != 0){
+          printf("%s\n", "Error");
+      }
+      getcwd(msg, 1024);
+      //free(args);
+      return msg;
+  } else {
+      if (fork() == 0) {
+          printf("%s\n", "After ");
+          close(STDOUT_FILENO);
+          close(fds[0]);
+          dup2(fds[1], STDOUT_FILENO);
+          dup2(fds[0], STDIN_FILENO);
+          close(fds[1]);
+          fflush(stdout);
+
+          int x;
+          for(x=0;x<tokens;x++) {
+              removeNewLine(args[x]);
+          }
+
+          if(0 < execvp(args[0], args)) {
+               perror("execvp failed");
+               printf("Command Failed! \n");
+          }
+          exit(0);
+      }
+      wait(0);
+      //free(args);
+      read(fds[0], msg, MSGSIZE);
       close(fds[1]);
-      fflush(stdout);
-      printf("asdf %s\n", commands[0]);
-      printf("asdfas %s\n", commands[1]);
-      execvp(commands[0], commands);
-      perror("execvp failed");
-      exit(0);
+      close(fds[0]);
+      printf("Done Reading %s\n", msg);
+      return msg;
   }
-  wait(0);
-  char* msg = malloc(sizeof(char) * 3000);
-  read(fds[0], msg, MSGSIZE);
-  close(fds[1]);
-  close(fds[0]);
-  printf("Done Reading %s\n", msg);
-  return msg;
 }
 
 int freeCommand(Command* command) {
     free(command);
     return 0;
-}
-
-static char *substring(char *string, int position, int length) {
-   char dest[length];
-   int len = strlen(string);
-   int x = position;
-
-   while (x*4 < len) {
-       strncpy(dest, string+(x*4), 4);
-       x++;
-   }
-   return dest;
 }

@@ -2,15 +2,18 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 #include "Socket.h"
 
 int removeSpaces(char *str);
 
 struct sockaddr_in address;
-int sock = 0, valread;
+int valread;
+int sock;
 struct sockaddr_in serv_addr;
 char buffer[1024] = {0};
 
@@ -21,19 +24,23 @@ int sendMessage(char* message) {
 }
 
 int readFromSocket() {
-  char* size[10];
+  char size[10];
   if(recv(sock, size, 10, 0) == -1) {
-    printf("recv error: %s \n", strerror(errno), errno);
+    printf("recv error: %s \n", strerror(errno));
   }
   char* message = malloc(sizeof(char) * atoi(size));
+  if(!message) {
+      printf("%s\n", "Malloc failed 33 socket.c ");
+  }
   printf("Size: %s \n", size);
   if(recv(sock, message, atoi(size), 0) == -1) {
-    printf("recv error: %s \n", strerror(errno), errno);
+    printf("recv error: %s \n", strerror(errno));
   }
   printf("shell> %s \n", message);
   fflush(stdout);
   strcpy(message, "");
   free(message);
+  return 0;
 }
 
 int setupSocket(char* ipMessage , int port) {
@@ -66,7 +73,8 @@ int setupSocket(char* ipMessage , int port) {
 
 int removeSpaces(char *str) {
     int count = 0;
-    for (int i = 0; str[i]; i++)
+    int i;
+    for (i = 0; str[i]; i++)
         if (str[i] != ' ')
             str[count++] = str[i];
     str[count] = '\0';

@@ -2,7 +2,7 @@
 # define Socket
 
 int sendMessage(char* message);
-int setupSocket();
+int setupSocket(char* ipMessage , int port);
 int readFromSocket();
 
 #endif
