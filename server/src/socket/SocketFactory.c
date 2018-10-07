@@ -8,7 +8,9 @@
 #include <sys/wait.h>
 #include <poll.h>
 
-#include "../Command/Command.h"
+#include "../command/Command.h"
+
+#define MSGSIZE 3000
 
 int sockfd, newsockfd, portno;
 socklen_t clilen;
@@ -32,7 +34,7 @@ int socketInit() {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 3007;
+   portno = 5000;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -45,8 +47,7 @@ int socketInit() {
 
    listen(sockfd,5);
    clilen = sizeof(cli_addr);
-
-    return 0;
+   return 0;
 }
 
 int handleConnections() {
@@ -87,12 +88,12 @@ int handleConnections() {
                   printf("Socket Closed \n");
                   exit(0);
                 }
-                //printf("Read : %s \n", socketBuffer);
-                if(socketBuffer[0] == '\n') {
-                  //probeSocket(newsockfd, "Connected To Server \n");
-                } else {
+
+                if(socketBuffer[0] != '\n') {
                   Command* command = newCommand(socketBuffer);
-                  char* stdoutFromExec = execute(command);
+                  char stdoutFromExec[MSGSIZE];
+                  execute(command, stdoutFromExec);
+                  printf("Going Out %s\n ", stdoutFromExec);
                   probeSocket(newsockfd, stdoutFromExec);
                   freeCommand(command);
                 }
