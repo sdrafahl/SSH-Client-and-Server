@@ -4,15 +4,14 @@
 #include <string.h>
 #include "./Socket/Socket.h"
 
+#define PORT 5000
+
 int main() {
     char message[3000];
-    char portMessage[6];
     char ipMessage[20];
     printf("Please Enter The IP Address you would like to connect to? \n");
     fgets(ipMessage, sizeof ipMessage, stdin);
-    printf("Please Enter The Port You would like to connect to? \n");
-    fgets(portMessage, sizeof portMessage, stdin);
-    setupSocket(ipMessage, atoi(portMessage));
+    setupSocket(ipMessage, PORT);
     int initialServerResponse = 0;
     while(1) {
       if(!initialServerResponse) {
