@@ -2,9 +2,8 @@
 
 ## TODO
 
-- Create Client Application
-- redirect output from exec() to pipe
+- Add standard Error
+- Document project
+- Remove print statements
 
 https://stackoverflow.com/questions/7292642/grabbing-output-from-exec
-
- 

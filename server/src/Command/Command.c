@@ -73,11 +73,15 @@ int tokenize(char* command, char** args) {
 
 int execute(Command* command, char* msg) {
   int fds[2];
+  int errorPipe[2];
+  memset(msg, '\0', MSGSIZE);
   if(command->command[0] == 10) {
     msg[0] = 0;
     return 0;
   }
   pipe(fds);
+  pipe(errorPipe);
+  fcntl(errorPipe[0], F_SETFL, O_NONBLOCK); /*Non Blocking Pipe */
   fcntl(fds[0], F_SETFL, O_NONBLOCK); /*Non Blocking Pipe */
   int tokens = numberOfTokens(command->command);
   char* args[tokens+1];
@@ -89,11 +93,6 @@ int execute(Command* command, char* msg) {
   }
 
   if(strcmp(args[0], "cd") == 0){
-      printf("here we go %s\n ", args[1]);
-      int x;
-      for(x=0;x<strlen(args[1]);x++) {
-        printf("%i\n ", args[1][x]);
-      }
       if(chdir(args[1]) != 0){
           printf("%s\n", "Error");
       }
@@ -105,6 +104,7 @@ int execute(Command* command, char* msg) {
           close(fds[0]);
           dup2(fds[1], STDOUT_FILENO);
           dup2(fds[0], STDIN_FILENO);
+          dup2(errorPipe[1], STDERR_FILENO);
           close(fds[1]);
           fflush(stdout);
 
@@ -115,7 +115,12 @@ int execute(Command* command, char* msg) {
           exit(0);
       }
       wait(0);
+      char errorMessage[3000];
       read(fds[0], msg, MSGSIZE);
+      read(errorPipe[0], errorMessage, MSGSIZE);
+      strcat(msg, errorMessage);
+      close(errorPipe[1]);
+      close(errorPipe[0]);
       close(fds[1]);
       close(fds[0]);
       return 0;
