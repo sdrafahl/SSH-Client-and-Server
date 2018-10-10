@@ -10,9 +10,7 @@
 
 #include "../command/Command.h"
 
-#define MSGSIZE 3000
-
-int sockfd, newsockfd, portno;
+int sockfd, newsockfd, portno, msgSize;
 socklen_t clilen;
 int link_[2];
 char pipeBuffer[4096];
@@ -20,8 +18,10 @@ struct sockaddr_in serv_addr, cli_addr;
 
 int probeSocket(int socket, char* message);
 
-int socketInit() {
+int socketInit(int messageSize, int portNumber) {
 
+   portno = portNumber;
+   msgSize = messageSize;
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
    if (sockfd < 0) {
@@ -90,10 +90,9 @@ int handleConnections() {
                 }
 
                 if(socketBuffer[0] != '\n') {
-                  Command* command = newCommand(socketBuffer);
-                  char stdoutFromExec[MSGSIZE];
+                  Command* command = newCommand(socketBuffer, msgSize);
+                  char stdoutFromExec[msgSize];
                   execute(command, stdoutFromExec);
-                  printf("Going Out %s\n ", stdoutFromExec);
                   probeSocket(newsockfd, stdoutFromExec);
                   freeCommand(command);
                 }

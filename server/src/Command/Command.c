@@ -9,24 +9,22 @@
 
 #include "Command.h"
 
-#define MSGSIZE 3000
-
 int tokenize(char* command, char** args);
 
 int numberOfTokens(char* command);
 
-char inbuf[MSGSIZE];
-
 struct CommandStruct {
     char* command;
+    int messageSize;
 };
 
-Command* newCommand(char* commandString) {
+Command* newCommand(char* commandString, int messageSize) {
     Command* command = malloc(sizeof(Command*));
     if(!command) {
         printf("%s\n", "malloc failed at line 23 Command.c ");
     }
     command->command = commandString;
+    command->messageSize = messageSize;
     return command;
 }
 
@@ -74,7 +72,7 @@ int tokenize(char* command, char** args) {
 int execute(Command* command, char* msg) {
   int fds[2];
   int errorPipe[2];
-  memset(msg, '\0', MSGSIZE);
+  memset(msg, '\0', command->messageSize);
   if(command->command[0] == 10) {
     msg[0] = 0;
     return 0;
@@ -96,7 +94,7 @@ int execute(Command* command, char* msg) {
       if(chdir(args[1]) != 0){
           printf("%s\n", "Error");
       }
-      getcwd(msg, MSGSIZE);
+      getcwd(msg, command->messageSize);
       return 0;
   } else {
       if (fork() == 0) {
@@ -116,8 +114,8 @@ int execute(Command* command, char* msg) {
       }
       wait(0);
       char errorMessage[3000];
-      read(fds[0], msg, MSGSIZE);
-      read(errorPipe[0], errorMessage, MSGSIZE);
+      read(fds[0], msg, command->messageSize);
+      read(errorPipe[0], errorMessage, command->messageSize);
       strcat(msg, errorMessage);
       close(errorPipe[1]);
       close(errorPipe[0]);

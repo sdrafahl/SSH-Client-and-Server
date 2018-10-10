@@ -3,9 +3,12 @@
 
 #include "socket/SocketFactory.h"
 
+#define MSGSIZE 3000
+#define PORTNUMBER 5000
+
 int main(int argc, char const *argv[])
 {
-    socketInit();
+    socketInit(MSGSIZE, PORTNUMBER);
     handleConnections();
     return 0;
 }

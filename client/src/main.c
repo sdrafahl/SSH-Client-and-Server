@@ -22,7 +22,6 @@ int main() {
       printf("shell> ");
       fgets(message, sizeof message, stdin);
       if(!strcmp(message, "quit\n")) {
-        printf("%s \n", message);
         exit(0);
       }
       if(message[0] != 10) {
