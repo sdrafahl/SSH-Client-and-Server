@@ -26,7 +26,7 @@ make
 ./sshClient
 ```
 
-## How To USE
+## How To Use
 
 1. Run the server
 

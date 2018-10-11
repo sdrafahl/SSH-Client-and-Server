@@ -32,7 +32,6 @@ int readFromSocket() {
   if(!message) {
       printf("%s\n", "Malloc failed 33 socket.c ");
   }
-  printf("Size: %s \n", size);
   if(recv(sock, message, atoi(size), 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
