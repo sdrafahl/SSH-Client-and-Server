@@ -8,7 +8,7 @@
 #include <sys/wait.h>
 #include <poll.h>
 
-#include "../command/Command.h"
+#include "../Command/Command.h"
 
 int sockfd, newsockfd, portno, msgSize;
 socklen_t clilen;
