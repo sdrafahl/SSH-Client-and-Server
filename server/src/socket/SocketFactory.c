@@ -34,7 +34,6 @@ int socketInit(int messageSize, int portNumber) {
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 5000;
 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;

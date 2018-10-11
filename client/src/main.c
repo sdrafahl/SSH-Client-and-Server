@@ -4,10 +4,11 @@
 #include <string.h>
 #include "./Socket/Socket.h"
 
-#define PORT 5000
+#define PORT 5164
+#define MSGSIZE 3000
 
 int main() {
-    char message[3000];
+    char message[MSGSIZE];
     char ipMessage[20];
     printf("Please Enter The IP Address you would like to connect to? \n");
     fgets(ipMessage, sizeof ipMessage, stdin);
