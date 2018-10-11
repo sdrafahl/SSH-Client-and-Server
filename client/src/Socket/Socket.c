@@ -64,6 +64,7 @@ int setupSocket(char* ipMessage , int port) {
   if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
   {
       printf("\nConnection Failed \n");
+      exit(0);
       return -1;
   }
   printf("Connected \n");

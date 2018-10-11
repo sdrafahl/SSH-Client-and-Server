@@ -4,7 +4,7 @@
 #include "socket/SocketFactory.h"
 
 #define MSGSIZE 3000
-#define PORTNUMBER 5165
+#define PORTNUMBER 5164
 
 int main(int argc, char const *argv[])
 {
