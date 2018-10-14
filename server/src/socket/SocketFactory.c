@@ -8,7 +8,7 @@
 #include <sys/wait.h>
 #include <poll.h>
 
-#include "../command/Command.h"
+#include "../Command/Command.h"
 /* The socket, the socket of the client,port number, and the msg max size */
 int sockfd, newsockfd, portno, msgSize;
 /* socket struct */
