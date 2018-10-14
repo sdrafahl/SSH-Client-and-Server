@@ -3,12 +3,15 @@
 
 #include "socket/SocketFactory.h"
 
+/*Port number and max message size */
 #define MSGSIZE 3000
 #define PORTNUMBER 5164
 
 int main(int argc, char const *argv[])
 {
+    /* Inits the socket */
     socketInit(MSGSIZE, PORTNUMBER);
+    /* handles connections */
     handleConnections();
     return 0;
 }

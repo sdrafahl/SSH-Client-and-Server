@@ -17,14 +17,17 @@ int sock;
 struct sockaddr_in serv_addr;
 char buffer[1024] = {0};
 
+/* Sends a message to the server */
 int sendMessage(char* message) {
   int length = strlen(message);
   write(sock, message, length);
   return 0;
 }
 
+/* reads from socket */
 int readFromSocket() {
   char size[10];
+  /* First reads the size of the incoming message */
   if(recv(sock, size, 10, 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
@@ -32,6 +35,7 @@ int readFromSocket() {
   if(!message) {
       printf("%s\n", "Malloc failed 33 socket.c ");
   }
+  /* Secondly reads the message */
   if(recv(sock, message, atoi(size), 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
@@ -42,12 +46,14 @@ int readFromSocket() {
   return 0;
 }
 
+/* Initalizes socket and connects to server */
 int setupSocket(char* ipMessage , int port) {
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
       printf("\n Socket creation error \n");
       return -1;
   }
+  /* Clear any memmory just in case */
   memset(&serv_addr, '0', sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(port);
@@ -71,6 +77,7 @@ int setupSocket(char* ipMessage , int port) {
   return 0;
 }
 
+/* Removes any extra spaces in a string */
 int removeSpaces(char *str) {
     int count = 0;
     int i;

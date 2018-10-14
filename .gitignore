@@ -2,3 +2,4 @@ sshServer
 sshClient
 /sshServer.dSYM
 /sshClient.dSYM
+.vscode

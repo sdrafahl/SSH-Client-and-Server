@@ -9,15 +9,16 @@
 #include <poll.h>
 
 #include "../command/Command.h"
-
+/* The socket, the socket of the client,port number, and the msg max size */
 int sockfd, newsockfd, portno, msgSize;
+/* socket struct */
 socklen_t clilen;
-int link_[2];
-char pipeBuffer[4096];
+/* socket address structs */
 struct sockaddr_in serv_addr, cli_addr;
 
 int probeSocket(int socket, char* message);
 
+/* Initalizes the socket connection on the server side */
 int socketInit(int messageSize, int portNumber) {
 
    portno = portNumber;
@@ -27,10 +28,6 @@ int socketInit(int messageSize, int portNumber) {
    if (sockfd < 0) {
       perror("ERROR opening socket");
       exit(1);
-   }
-
-   if(pipe(link_)==-1) {
-       exit(EXIT_FAILURE);
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -49,6 +46,7 @@ int socketInit(int messageSize, int portNumber) {
    return 0;
 }
 
+/* Gets connections from clients and spins off new processes for each one */
 int handleConnections() {
     while(1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -79,10 +77,11 @@ int handleConnections() {
             }
             probeSocket(newsockfd, message);
             while(1) {
+              /* Checks if there is data */
               if(poll(&pfd, 1, 100) > 0) {
                 char socketBuffer[3000];
                 bzero(socketBuffer, 3000);
-
+                /* reads incoming command */
                 if(recv(newsockfd, &socketBuffer, 3000, MSG_DONTWAIT) == 0) {
                   printf("Socket Closed \n");
                   exit(0);
@@ -103,6 +102,7 @@ int handleConnections() {
     }
 }
 
+/* sends a message to the client, else it determines if the socket is no longer connected to disconnect it */
 int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
     strcpy(message, "Command Complete ");

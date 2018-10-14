@@ -9,15 +9,19 @@
 
 #include "Command.h"
 
+/* Code in this file represents a command that is parsed and ready for execution. */
+
 int tokenize(char* command, char** args);
 
 int numberOfTokens(char* command);
 
+/* represents command with the message size and the command itself from the client */
 struct CommandStruct {
     char* command;
     int messageSize;
 };
 
+/* Command constructor */
 Command* newCommand(char* commandString, int messageSize) {
     Command* command = malloc(sizeof(Command*));
     if(!command) {
@@ -28,6 +32,7 @@ Command* newCommand(char* commandString, int messageSize) {
     return command;
 }
 
+/* Returns the number of tokens from the client -helper method */
 int numberOfTokens(char* command) {
   int numberTokens = 1;
   int length = strlen(command);
@@ -44,6 +49,7 @@ int numberOfTokens(char* command) {
   return numberTokens;
 }
 
+/* Removes the newline character at the end of the tokens -helper method  */
 int removeNewLine(char* str) {
     int counter = 0;
     for(counter = 0;counter<strlen(str);counter++){
@@ -55,8 +61,8 @@ int removeNewLine(char* str) {
     return 0;
 }
 
+/* converts string from client into a set of tokens in args -helper method */
 int tokenize(char* command, char** args) {
-
   char* token = strtok(command ," ");
   int counter = 0;
   while (token != NULL)
@@ -68,7 +74,7 @@ int tokenize(char* command, char** args) {
   args[counter] = 0;
   return 0;
 }
-
+/* executes the command, this is a public method */
 int execute(Command* command, char* msg) {
   int fds[2];
   int errorPipe[2];
@@ -89,7 +95,7 @@ int execute(Command* command, char* msg) {
   for(x=0;x<tokens;x++) {
       removeNewLine(args[x]);
   }
-
+  /* cd doesnt work correctly in execvp so I am using chdir and printing out the running directory using getcwd */
   if(strcmp(args[0], "cd") == 0){
       if(chdir(args[1]) != 0){
           printf("%s\n", "Error");
@@ -125,6 +131,7 @@ int execute(Command* command, char* msg) {
   }
 }
 
+/* Command deconstructor */
 int freeCommand(Command* command) {
     free(command);
     return 0;
