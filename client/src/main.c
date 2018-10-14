@@ -12,7 +12,7 @@ int main() {
     char message[MSGSIZE];
     char ipMessage[20];
     printf("Please Enter The IP Address you would like to connect to? \n");
-    fgets(ipMessage, sizeof ipMessage, stdin);
+    fgets(ipMessage, sizeof(ipMessage), stdin);
     setupSocket(ipMessage, PORT);
     int initialServerResponse = 0;
     /* loops untill the user enters quit or uses ctrl-c */
