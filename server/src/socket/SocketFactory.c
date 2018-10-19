@@ -9,6 +9,7 @@
 #include <poll.h>
 
 #include "../Command/Command.h"
+#include "../encrypt/encrypt.h"
 /* The socket, the socket of the client,port number, and the msg max size */
 int sockfd, newsockfd, portno, msgSize;
 /* socket struct */
@@ -87,6 +88,8 @@ int handleConnections() {
                   exit(0);
                 }
 
+                decrypt(socketBuffer);
+
                 if(socketBuffer[0] != '\n') {
                   Command* command = newCommand(socketBuffer, msgSize);
                   char stdoutFromExec[msgSize];
@@ -107,9 +110,11 @@ int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
     strcpy(message, "Command Complete ");
   }
+  encrypt(message);
   int length = strlen(message);
   char numberString[10];
   sprintf(numberString, " %d", length);
+  encrypt(numberString);
   send(socket, numberString, 10, 0);
   if(send(socket, message, strlen(message), 0) >= 0) {
     return 0;

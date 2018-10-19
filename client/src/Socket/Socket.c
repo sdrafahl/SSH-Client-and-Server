@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 #include "Socket.h"
+#include "../encrypt/encrypt.h"
 
 int removeSpaces(char *str);
 
@@ -20,6 +21,7 @@ char buffer[1024] = {0};
 /* Sends a message to the server */
 int sendMessage(char* message) {
   int length = strlen(message);
+  encrypt(message);
   write(sock, message, length);
   return 0;
 }
@@ -31,6 +33,7 @@ int readFromSocket() {
   if(recv(sock, size, 10, 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
+  decrypt(size);
   char* message = malloc(sizeof(char) * atoi(size));
   if(!message) {
       printf("%s\n", "Malloc failed 33 socket.c ");
@@ -39,6 +42,7 @@ int readFromSocket() {
   if(recv(sock, message, atoi(size), 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
+  decrypt(message);
   printf("shell> %s \n", message);
   fflush(stdout);
   strcpy(message, "");
