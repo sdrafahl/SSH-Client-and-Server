@@ -6,7 +6,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/mman.h>
 #include <poll.h>
+#include <signal.h>
 
 #include "../Command/Command.h"
 #include "../encrypt/encrypt.h"
@@ -18,10 +20,30 @@ socklen_t clilen;
 struct sockaddr_in serv_addr, cli_addr;
 
 int probeSocket(int socket, char* message);
+void* createSharedMemory(size_t size);
+
+void* listOfProcesses[100]; // list of commands
+int numberOfProcesses = 0;
+int lengthOfProcesses = 100;
 
 /* Initalizes the socket connection on the server side */
 int socketInit(int messageSize, int portNumber) {
 
+   int y;
+   for(y=0;y<lengthOfProcesses;y++) {
+       listOfProcesses[y] = "";
+   }
+
+   listOfProcessesString = (char*) createSharedMemory(sizeof(int*) * 20);
+   reading = (int*) createSharedMemory(sizeof(int*));
+   writing = (int*) createSharedMemory(sizeof(int*));
+   messageToRead = (int*) createSharedMemory(sizeof(int*));
+   messageFromProcess = (char*) createSharedMemory(sizeof(char*) * 20);
+   memcpy(listOfProcessesString, "", sizeof(char*));
+   memcpy(reading, 0, sizeof(int*));
+   memcpy(writing, 0, sizeof(int*));
+   memcpy(messageToRead, 0, sizeof(int*));
+   memcpy(messageFromProcess, "", sizeof(char*));
    portno = portNumber;
    msgSize = messageSize;
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -50,6 +72,74 @@ int socketInit(int messageSize, int portNumber) {
 /* Gets connections from clients and spins off new processes for each one */
 int handleConnections() {
     while(1) {
+        if(*messageToRead) {
+
+            if(*writing) {
+                wait(&writeSignal);
+            }
+
+            if(*reading) {
+                wait(&readSignal);
+            }
+
+            memcpy(writing, 1, sizeof(int));
+
+            char* commands[3];
+            tokenize(messageFromProcess, commands);
+
+            if(strcmp(commands[0],"ADD") == 0) {
+
+                if(lengthOfProcesses == numberOfProcesses) {
+                    void* newListOfProcesses[lengthOfProcesses * lengthOfProcesses];
+                    int x;
+                    for(x=0;x<lengthOfProcesses;x++) {
+                        newListOfProcesses[x] = newListOfProcesses[x];
+                    }
+                    lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
+                }
+                listOfProcesses[lengthOfProcesses] = "";
+                strcpy(listOfProcesses[lengthOfProcesses], commands[1]);
+                numberOfProcesses++;
+            }
+
+            if(strcmp(commands[0],"KILL") == 0) {
+
+                int processToDeleteIndex;
+                int x;
+                for(x=0;x<numberOfProcesses;x++) {
+                    if(strcmp(commands[1], listOfProcesses[x]) == 0) {
+                        processToDeleteIndex = x;
+                    }
+                }
+
+                for(x=processToDeleteIndex;x<numberOfProcesses;x++) {
+                    if(x == numberOfProcesses-1) {
+                        strcpy(newListOfProcesses[x], "");
+                    } else {
+                        strcpy(newListOfProcesses[x], newListOfProcesses[x+1]);
+                    }
+                }
+                strcpy(messageFromProcess, "");
+                numberOfProcesses--;
+            }
+
+            strcpy(listOfProcessesString, "");
+            int a;
+            for(a=0;a<numberOfProcesses;a++) {
+                strcat(listOfProcessesString, listOfProcesses[x]);
+                strcat(listOfProcessesString, " \n ");
+            }
+
+            int queLength = *messageToRead;
+            queLength--;
+            if(queLength < 0) {
+                queLength = 0;
+            }
+            memcpy(writing, 0, sizeof(int));
+            memcpy(messageToRead, queLength, sizeof(int*));
+            signal(&writeSignal, NULL);
+        }
+
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 
         if (newsockfd < 0) {
@@ -57,6 +147,7 @@ int handleConnections() {
             perror("ERROR on accept \n");
             exit(1);
         }
+
         int pid = fork();
 
         if(pid < 0) {
@@ -93,7 +184,12 @@ int handleConnections() {
                 if(socketBuffer[0] != '\n') {
                   Command* command = newCommand(socketBuffer, msgSize);
                   char stdoutFromExec[msgSize];
-                  execute(command, stdoutFromExec);
+
+                  char* listOfProcessesString;
+                  int readSignal;
+                  int writeSignal;
+
+                  execute(command, stdoutFromExec, listOfProcessesString, &readSignal, &writeSignal);
                   probeSocket(newsockfd, stdoutFromExec);
                   freeCommand(command);
                 }
@@ -120,4 +216,10 @@ int probeSocket(int socket, char* message) {
     return 0;
   }
   return 1;
+}
+
+void* createSharedMemory(size_t size) {
+  int protection = PROT_READ | PROT_WRITE;
+  int visibility = MAP_ANONYMOUS | MAP_SHARED;
+  return mmap(NULL, size, protection, visibility, 0, 0);
 }

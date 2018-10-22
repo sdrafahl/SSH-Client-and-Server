@@ -8,10 +8,9 @@
 #include <sys/wait.h>
 
 #include "Command.h"
+#include "../socket/SocketFactory.h"
 
 /* Code in this file represents a command that is parsed and ready for execution. */
-
-int tokenize(char* command, char** args);
 
 int numberOfTokens(char* command);
 
@@ -101,7 +100,20 @@ int execute(Command* command, char* msg) {
           printf("%s\n", "Error");
       }
       getcwd(msg, command->messageSize);
-      return 0;
+      exit(0);
+  } else if(strcmp(args[0], "jobs") == 0) {
+      if(*writing) {
+          wait(&writeSignal);
+      }
+      if(*reading) {
+          wait(&readSignal);
+      }
+      memcpy(reading, 1, sizeof(int));
+      write(fds[1], listOfProcessesString);
+      memcpy(reading, 0, sizeof(int));
+      signal(&readSignal);
+      close(fds[1]);
+      exit(0);
   } else {
       if (fork() == 0) {
           close(STDOUT_FILENO);
