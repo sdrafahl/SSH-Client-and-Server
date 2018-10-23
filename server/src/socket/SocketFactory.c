@@ -24,19 +24,15 @@ struct sockaddr_in serv_addr, cli_addr;
 int probeSocket(int socket, char* message);
 void* createSharedMemory(size_t size);
 
-void** listOfProcesses; // list of commands
+char** listOfProcesses; // list of commands
 int numberOfProcesses = 0;
 int lengthOfProcesses = 100;
 
-char* itoa(int val, int base){
-
-	static char buf[32] = {0};
-	int i = 30;
-	for(; val && i ; --i, val /= base)
-		buf[i] = "0123456789abcdef"[val % base];
-
-	return &buf[i+1];
-}
+char* listOfProcessesString;
+char* messageFromProcess;
+int* messageToRead;
+int* writing;
+int* reading;
 
 /* Initalizes the socket connection on the server side */
 int socketInit(int messageSize, int portNumber) {
@@ -87,7 +83,11 @@ int socketInit(int messageSize, int portNumber) {
 /* Gets connections from clients and spins off new processes for each one */
 int handleConnections() {
     while(1) {
+		printf("Message to read: %i\n", *messageToRead);
+		printf("Message from process %s\n", messageFromProcess);
         if(*messageToRead) {
+
+            printf("%s\n", "Enter the message to read");
 
             if(*writing) {
                 wait(&writeSignal);
@@ -108,12 +108,15 @@ int handleConnections() {
                     listOfProcesses = realloc(listOfProcesses, lengthOfProcesses * lengthOfProcesses * sizeof(char*));
                     lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
                 }
-                listOfProcesses[lengthOfProcesses] = "";
-                strcpy(listOfProcesses[lengthOfProcesses], commands[1]);
+
+                listOfProcesses[numberOfProcesses] = malloc(strlen(commands[1]) * sizeof(char));
+                strcpy(listOfProcesses[numberOfProcesses], commands[1]);
                 numberOfProcesses++;
             }
 
             if(strcmp(commands[0],"KILL") == 0) {
+
+				printf("%s\n", "Entering KILL");
 
                 int processToDeleteIndex;
                 int x;
@@ -123,11 +126,15 @@ int handleConnections() {
                     }
                 }
 
+				printf("index %i\n", processToDeleteIndex);
+
+				free(listOfProcesses[processToDeleteIndex]);
+
                 for(x=processToDeleteIndex;x<numberOfProcesses;x++) {
                     if(x == numberOfProcesses-1) {
                         strcpy(listOfProcesses[x], "");
                     } else {
-                        strcpy(listOfProcesses[x], listOfProcesses[x+1]);
+                        listOfProcesses[x] = listOfProcesses[x+1];
                     }
                 }
                 strcpy(messageFromProcess, "");
@@ -141,13 +148,11 @@ int handleConnections() {
                 strcat(listOfProcessesString, " \n ");
             }
 
-            int queLength = *messageToRead;
-            queLength--;
             if(queLength < 0) {
                 queLength = 0;
             }
             memcpy(writing, &FALSE, sizeof(int));
-            memcpy(messageToRead, &queLength, sizeof(int));
+			memcpy(messageToRead, &FALSE, sizeof(int));
             signal(writeSignal, NULL);
         }
 
@@ -167,6 +172,29 @@ int handleConnections() {
         }
 
         if(pid == 0) {
+			if(*reading) {
+                wait(&readSignal);
+            }
+
+            if(*writing) {
+                wait(&writeSignal);
+            }
+
+            while(*messageToRead) {
+                sleep(1);
+            }
+
+            memcpy(writing, &TRUE, sizeof(int));
+            char command[50];
+            strcpy(command, "ADD ");
+			int pid = getpid();
+			sprintf(command, "ADD %i", pid);
+            strcpy(messageFromProcess, command);
+			printf("Message from process %s\n", messageFromProcess);
+            memcpy(writing, &FALSE, sizeof(int));
+            memcpy(messageToRead, &TRUE, sizeof(int));
+            signal(writeSignal, NULL);
+			
             int sentConnectedMessage = 0;
             struct pollfd pfd;
             pfd.fd = newsockfd;
@@ -201,9 +229,9 @@ int handleConnections() {
 
                   memcpy(writing, &TRUE, sizeof(int));
                   char command[50];
-                  strcpy(command, "ADD ");
-                  strcat(command, itoa(getpid(), 10));
-                  strcpy(messageFromProcess, command);
+				  int pid = getpid();
+                  sprintf(command, "KILL %i", pid);
+				  strcpy(messageFromProcess, command);
                   memcpy(writing, &FALSE, sizeof(int));
                   memcpy(messageToRead, &TRUE, sizeof(int));
                   signal(writeSignal, NULL);
@@ -223,30 +251,15 @@ int handleConnections() {
                 }
               }
             }
-        } else {
-            if(*reading) {
-                wait(&readSignal);
-            }
-
-            if(*writing) {
-                wait(&writeSignal);
-            }
-
-            while(*messageToRead) {
-                sleep(1);
-            }
-
-            memcpy(writing, &TRUE, sizeof(int));
-            char command[50];
-            strcpy(command, "KILL ");
-            strcat(command, itoa(getpid(), 10));
-            strcpy(messageFromProcess, command);
-            memcpy(writing, &FALSE, sizeof(int));
-            memcpy(messageToRead, &TRUE, sizeof(int));
-            signal(writeSignal, NULL);
-            close(newsockfd);
         }
+        close(newsockfd);
     }
+}
+
+void* createSharedMemory(size_t size) {
+  int protection = PROT_READ | PROT_WRITE;
+  int visibility = MAP_ANONYMOUS | MAP_SHARED;
+  return mmap(NULL, size, protection, visibility, -1, 0);
 }
 
 /* sends a message to the client, else it determines if the socket is no longer connected to disconnect it */
@@ -264,10 +277,4 @@ int probeSocket(int socket, char* message) {
     return 0;
   }
   return 1;
-}
-
-void* createSharedMemory(size_t size) {
-  int protection = PROT_READ | PROT_WRITE;
-  int visibility = MAP_ANONYMOUS | MAP_SHARED;
-  return mmap(NULL, size, protection, visibility, 0, 0);
 }

@@ -5,7 +5,7 @@
 #include "./Socket/Socket.h"
 
 /* Port number to connect to and max message size */
-#define PORT 5164
+#define PORT 5171
 #define MSGSIZE 3000
 
 int main() {

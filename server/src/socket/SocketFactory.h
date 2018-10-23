@@ -7,11 +7,11 @@ int FALSE;
 int readSignal;
 int writeSignal;
 
-char* listOfProcessesString;
-char* messageFromProcess;
-int* messageToRead;
-int* writing;
-int* reading;
+extern char* listOfProcessesString;
+extern char* messageFromProcess;
+extern int* messageToRead;
+extern int* writing;
+extern int* reading;
 
 int socketInit(int messageSize, int portNumber);
 int handleConnections();

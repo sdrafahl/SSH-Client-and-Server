@@ -61,10 +61,10 @@ int setupSocket(char* ipMessage , int port) {
   memset(&serv_addr, '0', sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(port);
+  removeSpaces(ipMessage);
   if(strcmp("localhost", ipMessage) == 0) {
     strcpy(ipMessage, "127.0.0.1");
   }
-  removeSpaces(ipMessage);
 
   if(inet_pton(AF_INET, ipMessage, &serv_addr.sin_addr)<=0)
   {
