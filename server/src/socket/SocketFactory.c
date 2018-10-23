@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <poll.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #include "./SocketFactory.h"
 #include "../Command/Command.h"
@@ -64,6 +65,9 @@ int socketInit(int messageSize, int portNumber) {
       exit(1);
    }
 
+   int flags = fcntl(sockfd, F_GETFL);
+   fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+
    bzero((char *) &serv_addr, sizeof(serv_addr));
 
    serv_addr.sin_family = AF_INET;
@@ -83,7 +87,8 @@ int socketInit(int messageSize, int portNumber) {
 /* Gets connections from clients and spins off new processes for each one */
 int handleConnections() {
     while(1) {
-		printf("Message to read: %i\n", *messageToRead);
+		printf("Message to read id from parent: %i\n", messageToRead);
+    printf("Message to read value from parent: %i\n", *messageToRead);
 		printf("Message from process %s\n", messageFromProcess);
         if(*messageToRead) {
 
@@ -104,6 +109,8 @@ int handleConnections() {
 
             if(strcmp(commands[0],"ADD") == 0) {
 
+                printf("%s\n", "ADD command found");
+
                 if(lengthOfProcesses == numberOfProcesses) {
                     listOfProcesses = realloc(listOfProcesses, lengthOfProcesses * lengthOfProcesses * sizeof(char*));
                     lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
@@ -116,7 +123,7 @@ int handleConnections() {
 
             if(strcmp(commands[0],"KILL") == 0) {
 
-				printf("%s\n", "Entering KILL");
+				        printf("%s\n", "Entering KILL");
 
                 int processToDeleteIndex;
                 int x;
@@ -126,9 +133,9 @@ int handleConnections() {
                     }
                 }
 
-				printf("index %i\n", processToDeleteIndex);
+				         printf("index %i\n", processToDeleteIndex);
 
-				free(listOfProcesses[processToDeleteIndex]);
+				        free(listOfProcesses[processToDeleteIndex]);
 
                 for(x=processToDeleteIndex;x<numberOfProcesses;x++) {
                     if(x == numberOfProcesses-1) {
@@ -147,112 +154,115 @@ int handleConnections() {
                 strcat(listOfProcessesString, listOfProcesses[a]);
                 strcat(listOfProcessesString, " \n ");
             }
-
-            if(queLength < 0) {
-                queLength = 0;
-            }
             memcpy(writing, &FALSE, sizeof(int));
-			memcpy(messageToRead, &FALSE, sizeof(int));
+			      memcpy(messageToRead, &FALSE, sizeof(int));
             signal(writeSignal, NULL);
         }
 
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 
-        if (newsockfd < 0) {
-            printf("Error Connecting");
-            perror("ERROR on accept \n");
+        printf("Result of accept %i\n", newsockfd);
+
+        if(newsockfd > 0) {
+          printf("entering if statement %i\n", newsockfd);
+          int pid = fork();
+
+          if(pid < 0) {
+            perror("ERROR on fork \n");
             exit(1);
-        }
+          }
 
-        int pid = fork();
+          if(pid == 0) {
 
-        if(pid < 0) {
-          perror("ERROR on fork \n");
-          exit(1);
-        }
+              printf("Message to read id from child: %i\n", messageToRead);
+              printf("Message to read value from child: %i\n", *messageToRead);
 
-        if(pid == 0) {
-			if(*reading) {
-                wait(&readSignal);
-            }
+    			    if(*reading) {
+                  wait(&readSignal);
+              }
 
-            if(*writing) {
-                wait(&writeSignal);
-            }
+              if(*writing) {
+                  wait(&writeSignal);
+              }
 
-            while(*messageToRead) {
-                sleep(1);
-            }
+              while(*messageToRead) {
+                  sleep(1);
+              }
 
-            memcpy(writing, &TRUE, sizeof(int));
-            char command[50];
-            strcpy(command, "ADD ");
-			int pid = getpid();
-			sprintf(command, "ADD %i", pid);
-            strcpy(messageFromProcess, command);
-			printf("Message from process %s\n", messageFromProcess);
-            memcpy(writing, &FALSE, sizeof(int));
-            memcpy(messageToRead, &TRUE, sizeof(int));
-            signal(writeSignal, NULL);
-			
-            int sentConnectedMessage = 0;
-            struct pollfd pfd;
-            pfd.fd = newsockfd;
-          	pfd.events = POLLIN | POLLHUP | POLLRDNORM;
-          	pfd.revents = 0;
-            close(sockfd);
-            char message[3000];
-            if(!sentConnectedMessage) {
-              strcpy(message, "Connected to server....");
-              sentConnectedMessage = 1;
-            }
-            probeSocket(newsockfd, message);
-            while(1) {
-              /* Checks if there is data */
-              if(poll(&pfd, 1, 100) > 0) {
-                char socketBuffer[3000];
-                bzero(socketBuffer, 3000);
-                /* reads incoming command */
-                if(recv(newsockfd, &socketBuffer, 3000, MSG_DONTWAIT) == 0) {
+              memcpy(writing, &TRUE, sizeof(int));
+              char command[50];
+              strcpy(command, "ADD ");
+  			      int pid = getpid();
+  			      sprintf(command, "ADD %i", pid);
+              strcpy(messageFromProcess, command);
+              printf("Message from process \n", messageFromProcess);
 
-                  if(*reading) {
-                      wait(&readSignal);
+              memcpy(writing, &FALSE, sizeof(int));
+              memcpy(messageToRead, &TRUE, sizeof(int));
+              printf("Message to read - from child %i\n", *messageToRead);
+              printf("Message to read - from child id %i\n", messageToRead);
+              signal(writeSignal, NULL);
+
+              int sentConnectedMessage = 0;
+              struct pollfd pfd;
+              pfd.fd = newsockfd;
+            	pfd.events = POLLIN | POLLHUP | POLLRDNORM;
+            	pfd.revents = 0;
+              close(sockfd);
+              char message[3000];
+              if(!sentConnectedMessage) {
+                strcpy(message, "Connected to server....");
+                sentConnectedMessage = 1;
+              }
+              probeSocket(newsockfd, message);
+              while(1) {
+                /* Checks if there is data */
+                if(poll(&pfd, 1, 100) > 0) {
+                  char socketBuffer[3000];
+                  bzero(socketBuffer, 3000);
+                  /* reads incoming command */
+                  if(recv(newsockfd, &socketBuffer, 3000, MSG_DONTWAIT) == 0) {
+                    /* socket disconnected */
+                    if(*reading) {
+                        wait(&readSignal);
+                    }
+
+                    if(*writing) {
+                        wait(&writeSignal);
+                    }
+
+                    while(*messageToRead) {
+                        sleep(1);
+                    }
+
+                    memcpy(writing, &TRUE, sizeof(int));
+                    char command[50];
+  				          int pid = getpid();
+                    sprintf(command, "KILL %i", pid);
+  				          strcpy(messageFromProcess, command);
+                    memcpy(writing, &FALSE, sizeof(int));
+                    memcpy(messageToRead, &TRUE, sizeof(int));
+                    signal(writeSignal, NULL);
+                    printf("Socket Closed \n");
+                    exit(0);
                   }
 
-                  if(*writing) {
-                      wait(&writeSignal);
+                  decryptSlide(socketBuffer);
+
+                  if(socketBuffer[0] != '\n') {
+                    Command* command = newCommand(socketBuffer, msgSize);
+                    char stdoutFromExec[msgSize];
+
+                    execute(command, stdoutFromExec);
+                    probeSocket(newsockfd, stdoutFromExec);
+                    freeCommand(command);
                   }
-
-                  while(*messageToRead) {
-                      sleep(1);
-                  }
-
-                  memcpy(writing, &TRUE, sizeof(int));
-                  char command[50];
-				  int pid = getpid();
-                  sprintf(command, "KILL %i", pid);
-				  strcpy(messageFromProcess, command);
-                  memcpy(writing, &FALSE, sizeof(int));
-                  memcpy(messageToRead, &TRUE, sizeof(int));
-                  signal(writeSignal, NULL);
-                  printf("Socket Closed \n");
-                  exit(0);
-                }
-
-                decrypt(socketBuffer);
-
-                if(socketBuffer[0] != '\n') {
-                  Command* command = newCommand(socketBuffer, msgSize);
-                  char stdoutFromExec[msgSize];
-
-                  execute(command, stdoutFromExec);
-                  probeSocket(newsockfd, stdoutFromExec);
-                  freeCommand(command);
                 }
               }
-            }
+          }
+          close(newsockfd);
         }
-        close(newsockfd);
+        sleep(1);
     }
 }
 
@@ -267,11 +277,11 @@ int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
     strcpy(message, "Command Complete ");
   }
-  encrypt(message);
+  encryptSlide(message);
   int length = strlen(message);
   char numberString[10];
   sprintf(numberString, " %d", length);
-  encrypt(numberString);
+  encryptSlide(numberString);
   send(socket, numberString, 10, 0);
   if(send(socket, message, strlen(message), 0) >= 0) {
     return 0;

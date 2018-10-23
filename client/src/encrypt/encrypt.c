@@ -3,11 +3,11 @@
 
 int shift(char* decrypt, int n);
 
-int encrypt(char* decrypt) {
+int encryptSlide(char* decrypt) {
     return shift(decrypt, encryptShift);
 }
 
-int decrypt(char* decrypt) {
+int decryptSlide(char* decrypt) {
     return shift(decrypt, -1 * encryptShift);
 }
 

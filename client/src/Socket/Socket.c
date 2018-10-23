@@ -21,7 +21,7 @@ char buffer[1024] = {0};
 /* Sends a message to the server */
 int sendMessage(char* message) {
   int length = strlen(message);
-  encrypt(message);
+  encryptSlide(message);
   write(sock, message, length);
   return 0;
 }
@@ -33,7 +33,7 @@ int readFromSocket() {
   if(recv(sock, size, 10, 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
-  decrypt(size);
+  decryptSlide(size);
   char* message = malloc(sizeof(char) * atoi(size));
   if(!message) {
       printf("%s\n", "Malloc failed 33 socket.c ");
@@ -42,7 +42,7 @@ int readFromSocket() {
   if(recv(sock, message, atoi(size), 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
-  decrypt(message);
+  decryptSlide(message);
   printf("shell> %s \n", message);
   fflush(stdout);
   strcpy(message, "");
