@@ -1,9 +1,8 @@
 #ifndef CommandHeader
-# define CommandHeader
-
-#define encryptShift 4 /* 4 is the last digit of my student ID number */
+#define CommandHeader
 
 int decrypt(char* decrypt);
 int encrypt(char* decrypt);
 
+#define encryptShift 4 /* 4 is the last digit of my student ID number */
 #endif

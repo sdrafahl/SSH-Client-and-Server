@@ -7,18 +7,13 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-#include "Command.h"
 #include "../socket/SocketFactory.h"
+#include "./Command.h"
+#include "../encrypt/encrypt.h"
 
 /* Code in this file represents a command that is parsed and ready for execution. */
 
 int numberOfTokens(char* command);
-
-/* represents command with the message size and the command itself from the client */
-struct CommandStruct {
-    char* command;
-    int messageSize;
-};
 
 /* Command constructor */
 Command* newCommand(char* commandString, int messageSize) {
@@ -108,10 +103,11 @@ int execute(Command* command, char* msg) {
       if(*reading) {
           wait(&readSignal);
       }
-      memcpy(reading, 1, sizeof(int));
-      write(fds[1], listOfProcessesString);
-      memcpy(reading, 0, sizeof(int));
-      signal(&readSignal);
+
+      memcpy(reading, &TRUE, sizeof(int));
+      write(fds[1], listOfProcessesString, strlen(listOfProcessesString) + 1);
+      memcpy(reading, &FALSE, sizeof(int));
+      signal(readSignal, NULL);
       close(fds[1]);
       exit(0);
   } else {

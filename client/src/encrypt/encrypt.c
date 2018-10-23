@@ -1,3 +1,4 @@
+#include <string.h>
 #include "encrypt.h"
 
 int shift(char* decrypt, int n);
@@ -13,7 +14,7 @@ int decrypt(char* decrypt) {
 int shift(char* decrypt, int n) {
     int x;
     for(x=0;x<strlen(decrypt);x++) {
-        decrypt[x] + n;
+        decrypt[x] = decrypt[x] + n;
     }
     return 0;
 }

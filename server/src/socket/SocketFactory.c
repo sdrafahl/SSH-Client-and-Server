@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <string.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include <poll.h>
 #include <signal.h>
 
+#include "./SocketFactory.h"
 #include "../Command/Command.h"
 #include "../encrypt/encrypt.h"
 /* The socket, the socket of the client,port number, and the msg max size */
@@ -22,13 +24,26 @@ struct sockaddr_in serv_addr, cli_addr;
 int probeSocket(int socket, char* message);
 void* createSharedMemory(size_t size);
 
-void* listOfProcesses[100]; // list of commands
+void** listOfProcesses; // list of commands
 int numberOfProcesses = 0;
 int lengthOfProcesses = 100;
+
+char* itoa(int val, int base){
+
+	static char buf[32] = {0};
+	int i = 30;
+	for(; val && i ; --i, val /= base)
+		buf[i] = "0123456789abcdef"[val % base];
+
+	return &buf[i+1];
+}
 
 /* Initalizes the socket connection on the server side */
 int socketInit(int messageSize, int portNumber) {
 
+   TRUE = 1;
+   FALSE = 0;
+   listOfProcesses = malloc(100 * sizeof(char*));
    int y;
    for(y=0;y<lengthOfProcesses;y++) {
        listOfProcesses[y] = "";
@@ -39,11 +54,11 @@ int socketInit(int messageSize, int portNumber) {
    writing = (int*) createSharedMemory(sizeof(int*));
    messageToRead = (int*) createSharedMemory(sizeof(int*));
    messageFromProcess = (char*) createSharedMemory(sizeof(char*) * 20);
-   memcpy(listOfProcessesString, "", sizeof(char*));
-   memcpy(reading, 0, sizeof(int*));
-   memcpy(writing, 0, sizeof(int*));
-   memcpy(messageToRead, 0, sizeof(int*));
-   memcpy(messageFromProcess, "", sizeof(char*));
+   memcpy(listOfProcessesString, "", sizeof(char));
+   memcpy(reading, &FALSE, sizeof(int));
+   memcpy(writing, &FALSE, sizeof(int));
+   memcpy(messageToRead, &FALSE, sizeof(int));
+   memcpy(messageFromProcess, "", sizeof(char));
    portno = portNumber;
    msgSize = messageSize;
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -82,7 +97,7 @@ int handleConnections() {
                 wait(&readSignal);
             }
 
-            memcpy(writing, 1, sizeof(int));
+            memcpy(writing, &TRUE, sizeof(int));
 
             char* commands[3];
             tokenize(messageFromProcess, commands);
@@ -90,11 +105,7 @@ int handleConnections() {
             if(strcmp(commands[0],"ADD") == 0) {
 
                 if(lengthOfProcesses == numberOfProcesses) {
-                    void* newListOfProcesses[lengthOfProcesses * lengthOfProcesses];
-                    int x;
-                    for(x=0;x<lengthOfProcesses;x++) {
-                        newListOfProcesses[x] = newListOfProcesses[x];
-                    }
+                    listOfProcesses = realloc(listOfProcesses, lengthOfProcesses * lengthOfProcesses * sizeof(char*));
                     lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
                 }
                 listOfProcesses[lengthOfProcesses] = "";
@@ -114,9 +125,9 @@ int handleConnections() {
 
                 for(x=processToDeleteIndex;x<numberOfProcesses;x++) {
                     if(x == numberOfProcesses-1) {
-                        strcpy(newListOfProcesses[x], "");
+                        strcpy(listOfProcesses[x], "");
                     } else {
-                        strcpy(newListOfProcesses[x], newListOfProcesses[x+1]);
+                        strcpy(listOfProcesses[x], listOfProcesses[x+1]);
                     }
                 }
                 strcpy(messageFromProcess, "");
@@ -126,7 +137,7 @@ int handleConnections() {
             strcpy(listOfProcessesString, "");
             int a;
             for(a=0;a<numberOfProcesses;a++) {
-                strcat(listOfProcessesString, listOfProcesses[x]);
+                strcat(listOfProcessesString, listOfProcesses[a]);
                 strcat(listOfProcessesString, " \n ");
             }
 
@@ -135,9 +146,9 @@ int handleConnections() {
             if(queLength < 0) {
                 queLength = 0;
             }
-            memcpy(writing, 0, sizeof(int));
-            memcpy(messageToRead, queLength, sizeof(int*));
-            signal(&writeSignal, NULL);
+            memcpy(writing, &FALSE, sizeof(int));
+            memcpy(messageToRead, &queLength, sizeof(int));
+            signal(writeSignal, NULL);
         }
 
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -175,6 +186,27 @@ int handleConnections() {
                 bzero(socketBuffer, 3000);
                 /* reads incoming command */
                 if(recv(newsockfd, &socketBuffer, 3000, MSG_DONTWAIT) == 0) {
+
+                  if(*reading) {
+                      wait(&readSignal);
+                  }
+
+                  if(*writing) {
+                      wait(&writeSignal);
+                  }
+
+                  while(*messageToRead) {
+                      sleep(1);
+                  }
+
+                  memcpy(writing, &TRUE, sizeof(int));
+                  char command[50];
+                  strcpy(command, "ADD ");
+                  strcat(command, itoa(getpid(), 10));
+                  strcpy(messageFromProcess, command);
+                  memcpy(writing, &FALSE, sizeof(int));
+                  memcpy(messageToRead, &TRUE, sizeof(int));
+                  signal(writeSignal, NULL);
                   printf("Socket Closed \n");
                   exit(0);
                 }
@@ -185,17 +217,33 @@ int handleConnections() {
                   Command* command = newCommand(socketBuffer, msgSize);
                   char stdoutFromExec[msgSize];
 
-                  char* listOfProcessesString;
-                  int readSignal;
-                  int writeSignal;
-
-                  execute(command, stdoutFromExec, listOfProcessesString, &readSignal, &writeSignal);
+                  execute(command, stdoutFromExec);
                   probeSocket(newsockfd, stdoutFromExec);
                   freeCommand(command);
                 }
               }
             }
         } else {
+            if(*reading) {
+                wait(&readSignal);
+            }
+
+            if(*writing) {
+                wait(&writeSignal);
+            }
+
+            while(*messageToRead) {
+                sleep(1);
+            }
+
+            memcpy(writing, &TRUE, sizeof(int));
+            char command[50];
+            strcpy(command, "KILL ");
+            strcat(command, itoa(getpid(), 10));
+            strcpy(messageFromProcess, command);
+            memcpy(writing, &FALSE, sizeof(int));
+            memcpy(messageToRead, &TRUE, sizeof(int));
+            signal(writeSignal, NULL);
             close(newsockfd);
         }
     }

@@ -1,6 +1,7 @@
 csrc = $(wildcard src/*.c) \
        $(wildcard src/Command/*.c) \
 	   $(wildcard src/socket/*.c) \
+	   $(wildcard src/encrypt/*.c) \
 
 LDFLAGS = -Wall -ggdb -g
 

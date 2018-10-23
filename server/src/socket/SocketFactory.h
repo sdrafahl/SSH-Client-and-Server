@@ -1,5 +1,8 @@
-#ifndef Command
-# define Command
+#ifndef SOCKETFACTORY
+#define SOCKETFACTORY
+
+int TRUE;
+int FALSE;
 
 int readSignal;
 int writeSignal;
