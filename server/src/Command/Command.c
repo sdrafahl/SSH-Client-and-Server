@@ -95,8 +95,8 @@ int execute(Command* command, char* msg) {
           printf("%s\n", "Error");
       }
       getcwd(msg, command->messageSize);
-      exit(0);
   } else if(strcmp(args[0], "jobs") == 0) {
+      printf("%s\n", "command is a job");
       if(*writing) {
           wait(&writeSignal);
       }
@@ -105,11 +105,15 @@ int execute(Command* command, char* msg) {
       }
 
       memcpy(reading, &TRUE, sizeof(int));
+      printf("%s\n", listOfProcessesString);
       write(fds[1], listOfProcessesString, strlen(listOfProcessesString) + 1);
+      printf("%s\n", "done writing");
       memcpy(reading, &FALSE, sizeof(int));
       signal(readSignal, NULL);
+      read(fds[0], msg, command->messageSize);
+      printf("the message from pipe %s\n", msg);
       close(fds[1]);
-      exit(0);
+      close(fds[0]);
   } else {
       if (fork() == 0) {
           close(STDOUT_FILENO);

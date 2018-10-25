@@ -87,9 +87,7 @@ int socketInit(int messageSize, int portNumber) {
 /* Gets connections from clients and spins off new processes for each one */
 int handleConnections() {
     while(1) {
-		printf("Message to read id from parent: %i\n", messageToRead);
-    printf("Message to read value from parent: %i\n", *messageToRead);
-		printf("Message from process %s\n", messageFromProcess);
+        printf("%s\n", "loop");
         if(*messageToRead) {
 
             printf("%s\n", "Enter the message to read");
@@ -129,11 +127,13 @@ int handleConnections() {
                 int x;
                 for(x=0;x<numberOfProcesses;x++) {
                     if(strcmp(commands[1], listOfProcesses[x]) == 0) {
+                        printf("processs to kill %s\n", listOfProcesses[x]);
                         processToDeleteIndex = x;
                     }
                 }
 
-				         printf("index %i\n", processToDeleteIndex);
+				        printf("index %i\n", processToDeleteIndex);
+
 
 				        free(listOfProcesses[processToDeleteIndex]);
 
@@ -152,6 +152,7 @@ int handleConnections() {
             int a;
             for(a=0;a<numberOfProcesses;a++) {
                 strcat(listOfProcessesString, listOfProcesses[a]);
+                printf("List Of jobs %s\n", listOfProcessesString);
                 strcat(listOfProcessesString, " \n ");
             }
             memcpy(writing, &FALSE, sizeof(int));
@@ -161,10 +162,7 @@ int handleConnections() {
 
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 
-        printf("Result of accept %i\n", newsockfd);
-
         if(newsockfd > 0) {
-          printf("entering if statement %i\n", newsockfd);
           int pid = fork();
 
           if(pid < 0) {
@@ -173,9 +171,6 @@ int handleConnections() {
           }
 
           if(pid == 0) {
-
-              printf("Message to read id from child: %i\n", messageToRead);
-              printf("Message to read value from child: %i\n", *messageToRead);
 
     			    if(*reading) {
                   wait(&readSignal);
@@ -195,12 +190,9 @@ int handleConnections() {
   			      int pid = getpid();
   			      sprintf(command, "ADD %i", pid);
               strcpy(messageFromProcess, command);
-              printf("Message from process \n", messageFromProcess);
 
               memcpy(writing, &FALSE, sizeof(int));
               memcpy(messageToRead, &TRUE, sizeof(int));
-              printf("Message to read - from child %i\n", *messageToRead);
-              printf("Message to read - from child id %i\n", messageToRead);
               signal(writeSignal, NULL);
 
               int sentConnectedMessage = 0;
@@ -216,6 +208,7 @@ int handleConnections() {
               }
               probeSocket(newsockfd, message);
               while(1) {
+                printf("%s\n", "child loop");
                 /* Checks if there is data */
                 if(poll(&pfd, 1, 100) > 0) {
                   char socketBuffer[3000];
@@ -252,12 +245,13 @@ int handleConnections() {
                   if(socketBuffer[0] != '\n') {
                     Command* command = newCommand(socketBuffer, msgSize);
                     char stdoutFromExec[msgSize];
-
+                    printf("Executing command %s\n", command);
                     execute(command, stdoutFromExec);
                     probeSocket(newsockfd, stdoutFromExec);
                     freeCommand(command);
                   }
                 }
+                sleep(1);
               }
           }
           close(newsockfd);
