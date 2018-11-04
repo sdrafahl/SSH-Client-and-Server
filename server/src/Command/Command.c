@@ -95,6 +95,7 @@ int execute(Command* command, char* msg) {
           printf("%s\n", "Error");
       }
       getcwd(msg, command->messageSize);
+      return 0;
   } else if(strcmp(args[0], "jobs") == 0) {
       printf("%s\n", "command is a job");
       if(*writing) {
@@ -114,6 +115,7 @@ int execute(Command* command, char* msg) {
       printf("the message from pipe %s\n", msg);
       close(fds[1]);
       close(fds[0]);
+      return 0;
   } else {
       if (fork() == 0) {
           close(STDOUT_FILENO);

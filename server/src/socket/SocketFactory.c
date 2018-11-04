@@ -87,11 +87,7 @@ int socketInit(int messageSize, int portNumber) {
 /* Gets connections from clients and spins off new processes for each one */
 int handleConnections() {
     while(1) {
-        printf("%s\n", "loop");
         if(*messageToRead) {
-
-            printf("%s\n", "Enter the message to read");
-
             if(*writing) {
                 wait(&writeSignal);
             }
@@ -107,8 +103,6 @@ int handleConnections() {
 
             if(strcmp(commands[0],"ADD") == 0) {
 
-                printf("%s\n", "ADD command found");
-
                 if(lengthOfProcesses == numberOfProcesses) {
                     listOfProcesses = realloc(listOfProcesses, lengthOfProcesses * lengthOfProcesses * sizeof(char*));
                     lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
@@ -121,22 +115,15 @@ int handleConnections() {
 
             if(strcmp(commands[0],"KILL") == 0) {
 
-				        printf("%s\n", "Entering KILL");
-
+                wait(NULL); /* reaps zombie process */
                 int processToDeleteIndex;
                 int x;
                 for(x=0;x<numberOfProcesses;x++) {
                     if(strcmp(commands[1], listOfProcesses[x]) == 0) {
-                        printf("processs to kill %s\n", listOfProcesses[x]);
                         processToDeleteIndex = x;
                     }
                 }
-
-				        printf("index %i\n", processToDeleteIndex);
-
-
-				        free(listOfProcesses[processToDeleteIndex]);
-
+				free(listOfProcesses[processToDeleteIndex]);
                 for(x=processToDeleteIndex;x<numberOfProcesses;x++) {
                     if(x == numberOfProcesses-1) {
                         strcpy(listOfProcesses[x], "");
@@ -152,11 +139,10 @@ int handleConnections() {
             int a;
             for(a=0;a<numberOfProcesses;a++) {
                 strcat(listOfProcessesString, listOfProcesses[a]);
-                printf("List Of jobs %s\n", listOfProcessesString);
                 strcat(listOfProcessesString, " \n ");
             }
             memcpy(writing, &FALSE, sizeof(int));
-			      memcpy(messageToRead, &FALSE, sizeof(int));
+			memcpy(messageToRead, &FALSE, sizeof(int));
             signal(writeSignal, NULL);
         }
 
@@ -208,7 +194,6 @@ int handleConnections() {
               }
               probeSocket(newsockfd, message);
               while(1) {
-                printf("%s\n", "child loop");
                 /* Checks if there is data */
                 if(poll(&pfd, 1, 100) > 0) {
                   char socketBuffer[3000];
@@ -245,7 +230,6 @@ int handleConnections() {
                   if(socketBuffer[0] != '\n') {
                     Command* command = newCommand(socketBuffer, msgSize);
                     char stdoutFromExec[msgSize];
-                    printf("Executing command %s\n", command);
                     execute(command, stdoutFromExec);
                     probeSocket(newsockfd, stdoutFromExec);
                     freeCommand(command);
