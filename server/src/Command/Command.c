@@ -17,11 +17,13 @@ int numberOfTokens(char* command);
 
 /* Command constructor */
 Command* newCommand(char* commandString, int messageSize) {
-    Command* command = malloc(sizeof(Command*));
+    Command* command = malloc(sizeof(Command*) * 2);
     if(!command) {
         printf("%s\n", "malloc failed at line 23 Command.c ");
     }
-    command->command = commandString;
+    command->command = malloc(sizeof(char) * messageSize);
+    strcpy(command->command, "");
+    strcpy(command->command, commandString);
     command->messageSize = messageSize;
     return command;
 }
@@ -108,13 +110,38 @@ int execute(Command* command, char* msg) {
       memcpy(reading, &TRUE, sizeof(int));
       printf("%s\n", listOfProcessesString);
       write(fds[1], listOfProcessesString, strlen(listOfProcessesString) + 1);
-      printf("%s\n", "done writing");
       memcpy(reading, &FALSE, sizeof(int));
       signal(readSignal, NULL);
       read(fds[0], msg, command->messageSize);
-      printf("the message from pipe %s\n", msg);
       close(fds[1]);
       close(fds[0]);
+      return 0;
+
+  } else if(strcmp(args[0], "History") == 0) {
+      int length = numberOfCommandsInCache;
+      if(numberOfCommandsInCache > 9) {
+        length = 10;
+      }
+      int size = 0;
+      int x;
+      for(x=0;x<length;x++) {
+          size += commandCache[x]->messageSize;
+      }
+      char* historyString = malloc(size * sizeof(char));
+      strcpy(historyString, "");
+      printf("Length %i\n", length);
+      for(x=0;x<length;x++) {
+          printf("X %i\n", x);
+          printf("Command Stored %s\n", commandCache[x]->command);
+          printf("command read address %i\n", commandCache[x]);
+          strcat(historyString, commandCache[x]->command);
+          strcat(historyString, " \n ");
+      }
+      strcpy(msg, historyString);
+      strcpy(historyString, "");
+      free(historyString);
+      close(fds[0]);
+      close(fds[1]);
       return 0;
   } else {
       if (fork() == 0) {
@@ -147,6 +174,7 @@ int execute(Command* command, char* msg) {
 
 /* Command deconstructor */
 int freeCommand(Command* command) {
+    free(command->command);
     free(command);
     return 0;
 }

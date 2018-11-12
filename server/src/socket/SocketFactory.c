@@ -15,6 +15,7 @@
 #include "./SocketFactory.h"
 #include "../Command/Command.h"
 #include "../encrypt/encrypt.h"
+
 /* The socket, the socket of the client,port number, and the msg max size */
 int sockfd, newsockfd, portno, msgSize;
 /* socket struct */
@@ -34,6 +35,10 @@ char* messageFromProcess;
 int* messageToRead;
 int* writing;
 int* reading;
+
+int cacheSize = 10;
+Command* commandCache[10];
+int numberOfCommandsInCache;
 
 /* Initalizes the socket connection on the server side */
 int socketInit(int messageSize, int portNumber) {
@@ -142,7 +147,7 @@ int handleConnections() {
                 strcat(listOfProcessesString, " \n ");
             }
             memcpy(writing, &FALSE, sizeof(int));
-			memcpy(messageToRead, &FALSE, sizeof(int));
+			      memcpy(messageToRead, &FALSE, sizeof(int));
             signal(writeSignal, NULL);
         }
 
@@ -170,6 +175,7 @@ int handleConnections() {
                   sleep(1);
               }
 
+              numberOfCommandsInCache = 0;
               memcpy(writing, &TRUE, sizeof(int));
               char command[50];
               strcpy(command, "ADD ");
@@ -231,8 +237,29 @@ int handleConnections() {
                     Command* command = newCommand(socketBuffer, msgSize);
                     char stdoutFromExec[msgSize];
                     execute(command, stdoutFromExec);
+                    if(numberOfCommandsInCache > 9) {
+                        printf("%s\n", "free");
+                        freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
+                    }
+                    printf("Command to execute: %s\n", command->command);
+                    printf("Mod %i\n", numberOfCommandsInCache % cacheSize);
+                    if(numberOfCommandsInCache != 0) {
+                      printf("data from array before %s\n", commandCache[0]->command);
+                    }
+
+                    commandCache[numberOfCommandsInCache % cacheSize] = command;
+                    printf("data from array %s\n", commandCache[0]->command);
+                    int y;
+
+
+                    numberOfCommandsInCache++;
+                    for(y=0;y<numberOfCommandsInCache;y++) {
+                      printf("Pointer %i\n", commandCache[y]);
+                      printf("Pointer Val %s\n", commandCache[y]->command);
+                      printf("OG Pointer %i\n", command);
+                      printf("OG Pointer val %s\n", command->command);
+                    }
                     probeSocket(newsockfd, stdoutFromExec);
-                    freeCommand(command);
                   }
                 }
                 sleep(1);
