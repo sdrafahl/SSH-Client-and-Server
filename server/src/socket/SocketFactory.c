@@ -238,27 +238,10 @@ int handleConnections() {
                     char stdoutFromExec[msgSize];
                     execute(command, stdoutFromExec);
                     if(numberOfCommandsInCache > 9) {
-                        printf("%s\n", "free");
                         freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
                     }
-                    printf("Command to execute: %s\n", command->command);
-                    printf("Mod %i\n", numberOfCommandsInCache % cacheSize);
-                    if(numberOfCommandsInCache != 0) {
-                      printf("data from array before %s\n", commandCache[0]->command);
-                    }
-
                     commandCache[numberOfCommandsInCache % cacheSize] = command;
-                    printf("data from array %s\n", commandCache[0]->command);
-                    int y;
-
-
                     numberOfCommandsInCache++;
-                    for(y=0;y<numberOfCommandsInCache;y++) {
-                      printf("Pointer %i\n", commandCache[y]);
-                      printf("Pointer Val %s\n", commandCache[y]->command);
-                      printf("OG Pointer %i\n", command);
-                      printf("OG Pointer val %s\n", command->command);
-                    }
                     probeSocket(newsockfd, stdoutFromExec);
                   }
                 }

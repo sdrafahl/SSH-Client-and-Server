@@ -99,7 +99,6 @@ int execute(Command* command, char* msg) {
       getcwd(msg, command->messageSize);
       return 0;
   } else if(strcmp(args[0], "jobs") == 0) {
-      printf("%s\n", "command is a job");
       if(*writing) {
           wait(&writeSignal);
       }
@@ -107,14 +106,10 @@ int execute(Command* command, char* msg) {
           wait(&readSignal);
       }
 
-      memcpy(reading, &TRUE, sizeof(int));
-      printf("%s\n", listOfProcessesString);
-      write(fds[1], listOfProcessesString, strlen(listOfProcessesString) + 1);
+      memcpy(reading, &TRUE, sizeof(int));;
+      strcpy(msg, listOfProcessesString);
       memcpy(reading, &FALSE, sizeof(int));
       signal(readSignal, NULL);
-      read(fds[0], msg, command->messageSize);
-      close(fds[1]);
-      close(fds[0]);
       return 0;
 
   } else if(strcmp(args[0], "History") == 0) {
@@ -129,19 +124,45 @@ int execute(Command* command, char* msg) {
       }
       char* historyString = malloc(size * sizeof(char));
       strcpy(historyString, "");
-      printf("Length %i\n", length);
       for(x=0;x<length;x++) {
-          printf("X %i\n", x);
-          printf("Command Stored %s\n", commandCache[x]->command);
-          printf("command read address %i\n", commandCache[x]);
           strcat(historyString, commandCache[x]->command);
           strcat(historyString, " \n ");
       }
       strcpy(msg, historyString);
       strcpy(historyString, "");
       free(historyString);
-      close(fds[0]);
-      close(fds[1]);
+      return 0;
+  } else if(strcmp(args[0], "!!") == 0) {
+      if(numberOfCommandsInCache == 0) {
+          strcpy(msg, "No commands in history");
+          return 0;
+      }
+      int index = (numberOfCommandsInCache - 1) % cacheSize;
+      int tokens = numberOfTokens(commandCache[index]->command);
+      char* argss[tokens+1];
+      tokenize(commandCache[index]->command, argss);
+      if(index >= 0 && strcmp(argss[0], "!!") != 0) {;
+          execute(commandCache[index], msg);
+      } else {
+          strcpy(msg, "Cant call !! with !!");
+      }
+      return 0;
+  } else if(args[0][0] == '!') {
+      int length = strlen(args[0]);
+      char* indexString = malloc(length * sizeof(char));
+      strcpy(indexString, "");
+      int x;
+      char num[length - 1];
+      for(x=1;x<length;x++) {
+          num[x - 1] = args[0][x];
+      }
+      strcat(indexString, num);
+      int index = atoi(indexString);
+      if(numberOfCommandsInCache >= index+1) {
+          execute(commandCache[index+1], msg);
+      } else {
+          strcpy(msg, "Index out of bounds \n");
+      }
       return 0;
   } else {
       if (fork() == 0) {
