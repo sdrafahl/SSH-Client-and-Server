@@ -15,6 +15,14 @@
 
 int numberOfTokens(char* command);
 
+void removeSpaces(char *str1)
+{
+    char *str2;
+    str2=str1;
+    while (*str2==' ') str2++;
+    if (str2!=str1) memmove(str1,str2,strlen(str2)+1);
+}
+
 /* Command constructor */
 Command* newCommand(char* commandString, int messageSize) {
     Command* command = malloc(sizeof(Command*) * 2);
@@ -24,6 +32,7 @@ Command* newCommand(char* commandString, int messageSize) {
     command->command = malloc(sizeof(char) * messageSize);
     strcpy(command->command, "");
     strcpy(command->command, commandString);
+    removeSpaces(command->command);
     command->messageSize = messageSize;
     return command;
 }
@@ -58,13 +67,13 @@ int removeNewLine(char* str) {
 }
 
 /* converts string from client into a set of tokens in args -helper method */
-int tokenize(char* command, char** args) {
-  char* token = strtok(command ," ");
+int tokenize(char* command, char* del, char** args) {
+  char* token = strtok(command, del);
   int counter = 0;
   while (token != NULL)
   {
     args[counter] = token;
-    token = strtok(NULL, " ");
+    token = strtok(NULL, del);
     counter++;
   }
   args[counter] = 0;
@@ -85,7 +94,7 @@ int execute(Command* command, char* msg) {
   fcntl(fds[0], F_SETFL, O_NONBLOCK); /*Non Blocking Pipe */
   int tokens = numberOfTokens(command->command);
   char* args[tokens+1];
-  tokenize(command->command, args);
+  tokenize(command->command, " " , args);
 
   int x;
   for(x=0;x<tokens;x++) {
@@ -140,7 +149,7 @@ int execute(Command* command, char* msg) {
       int index = (numberOfCommandsInCache - 1) % cacheSize;
       int tokens = numberOfTokens(commandCache[index]->command);
       char* argss[tokens+1];
-      tokenize(commandCache[index]->command, argss);
+      tokenize(commandCache[index]->command, " " , argss);
       if(index >= 0 && strcmp(argss[0], "!!") != 0) {;
           execute(commandCache[index], msg);
       } else {
@@ -158,6 +167,7 @@ int execute(Command* command, char* msg) {
       }
       strcat(indexString, num);
       int index = atoi(indexString);
+      free(indexString);
       if(numberOfCommandsInCache >= index+1) {
           execute(commandCache[index+1], msg);
       } else {

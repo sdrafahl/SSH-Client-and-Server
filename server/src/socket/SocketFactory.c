@@ -104,7 +104,7 @@ int handleConnections() {
             memcpy(writing, &TRUE, sizeof(int));
 
             char* commands[3];
-            tokenize(messageFromProcess, commands);
+            tokenize(messageFromProcess, " ", commands);
 
             if(strcmp(commands[0],"ADD") == 0) {
 
@@ -163,7 +163,7 @@ int handleConnections() {
 
           if(pid == 0) {
 
-    			    if(*reading) {
+    	      if(*reading) {
                   wait(&readSignal);
               }
 
@@ -179,8 +179,8 @@ int handleConnections() {
               memcpy(writing, &TRUE, sizeof(int));
               char command[50];
               strcpy(command, "ADD ");
-  			      int pid = getpid();
-  			      sprintf(command, "ADD %i", pid);
+  			  int pid = getpid();
+  			  sprintf(command, "ADD %i", pid);
               strcpy(messageFromProcess, command);
 
               memcpy(writing, &FALSE, sizeof(int));
@@ -190,8 +190,8 @@ int handleConnections() {
               int sentConnectedMessage = 0;
               struct pollfd pfd;
               pfd.fd = newsockfd;
-            	pfd.events = POLLIN | POLLHUP | POLLRDNORM;
-            	pfd.revents = 0;
+              pfd.events = POLLIN | POLLHUP | POLLRDNORM;
+              pfd.revents = 0;
               close(sockfd);
               char message[3000];
               if(!sentConnectedMessage) {
@@ -221,9 +221,9 @@ int handleConnections() {
 
                     memcpy(writing, &TRUE, sizeof(int));
                     char command[50];
-  				          int pid = getpid();
+  				    int pid = getpid();
                     sprintf(command, "KILL %i", pid);
-  				          strcpy(messageFromProcess, command);
+  				    strcpy(messageFromProcess, command);
                     memcpy(writing, &FALSE, sizeof(int));
                     memcpy(messageToRead, &TRUE, sizeof(int));
                     signal(writeSignal, NULL);
@@ -234,15 +234,34 @@ int handleConnections() {
                   decryptSlide(socketBuffer);
 
                   if(socketBuffer[0] != '\n') {
-                    Command* command = newCommand(socketBuffer, msgSize);
-                    char stdoutFromExec[msgSize];
-                    execute(command, stdoutFromExec);
-                    if(numberOfCommandsInCache > 9) {
-                        freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
+                    int semiColons = 0;
+                    int x;
+                    for(x = 0;x<strlen(socketBuffer);x++) {
+                        if(socketBuffer[x] == ';') {
+                            semiColons++;
+                        }
                     }
-                    commandCache[numberOfCommandsInCache % cacheSize] = command;
-                    numberOfCommandsInCache++;
-                    probeSocket(newsockfd, stdoutFromExec);
+                    semiColons++;
+                    char* messageToClient = malloc(msgSize * 5 * sizeof(char));
+                    strcpy(messageToClient, "");
+                    char* commands[semiColons];
+                    tokenize(socketBuffer, ";", commands);
+                    for(x = 0;x < semiColons;x++) {
+                        printf("Commands %s\n", commands[x]);
+                        Command* command = newCommand(commands[x], msgSize);
+                        char stdoutFromExec[msgSize];
+                        execute(command, stdoutFromExec);
+                        strcat(messageToClient, stdoutFromExec);
+                        printf("stdout from exec %s\n", stdoutFromExec);
+                        strcat(messageToClient, "\n");
+                        if(numberOfCommandsInCache > 9) {
+                            freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
+                        }
+                        commandCache[numberOfCommandsInCache % cacheSize] = command;
+                        numberOfCommandsInCache++;
+                    }
+                    probeSocket(newsockfd, messageToClient);
+                    free(messageToClient);
                   }
                 }
                 sleep(1);

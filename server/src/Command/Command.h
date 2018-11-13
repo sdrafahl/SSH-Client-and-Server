@@ -7,7 +7,7 @@ typedef struct {
 } Command;
 
 /* All of the following are public methods that should be accesable outside Command.c */
-int tokenize(char* command, char** args);
+int tokenize(char* command, char* del, char** args);
 Command* newCommand(char* commandString, int messageSize);
 int freeCommand(Command* command);
 int execute(Command* command, char* msg);
