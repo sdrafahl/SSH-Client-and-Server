@@ -15,12 +15,19 @@
 
 int numberOfTokens(char* command);
 
-void removeSpaces(char *str1)
-{
+void removeSpaces(char *str1){
     char *str2;
     str2=str1;
     while (*str2==' ') str2++;
     if (str2!=str1) memmove(str1,str2,strlen(str2)+1);
+
+    int x;
+    for(x=0;x<strlen(str1);x++) {
+        if(str1[x] == ' ') {
+            str1[x] = '\0';
+            break;
+        }
+    }
 }
 
 /* Command constructor */
