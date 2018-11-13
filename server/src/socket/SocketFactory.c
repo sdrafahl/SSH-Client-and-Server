@@ -247,12 +247,10 @@ int handleConnections() {
                     char* commands[semiColons];
                     tokenize(socketBuffer, ";", commands);
                     for(x = 0;x < semiColons;x++) {
-                        printf("Commands %s\n", commands[x]);
                         Command* command = newCommand(commands[x], msgSize);
                         char stdoutFromExec[msgSize];
                         execute(command, stdoutFromExec);
                         strcat(messageToClient, stdoutFromExec);
-                        printf("stdout from exec %s\n", stdoutFromExec);
                         strcat(messageToClient, "\n");
                         if(numberOfCommandsInCache > 9) {
                             freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
