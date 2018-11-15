@@ -262,6 +262,7 @@ int handleConnections() {
                         if(numberOfCommandsInCache > 9) {
                             freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
                         }
+                        printf("Command: %s\n", command->command);
                         commandCache[numberOfCommandsInCache % cacheSize] = command;
                         numberOfCommandsInCache++;
                     }

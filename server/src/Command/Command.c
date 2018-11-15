@@ -30,15 +30,10 @@ void removeSpaces(char *str1){
             index = x;
         }
     }
-    printf("index1 %i\n", index1);
-    printf("index %i\n", index);
-    printf("%s\n", str1);
     int length = strlen(str1);
-    printf("length %i\n", length);
     char temp[length];
     strncpy(temp, str1+index1, (index-index1)+1);
     strcat(temp, "\0");
-    printf("str %s\n", temp);
     strcpy(str1, temp);
 }
 
@@ -187,10 +182,10 @@ int execute(Command* command, char* msg) {
       strcat(indexString, num);
       int index = atoi(indexString);
       free(indexString);
-      if(numberOfCommandsInCache >= index+1) {
-          execute(commandCache[index+1], msg);
+      if(numberOfCommandsInCache > index) {
+          execute(commandCache[index-1], msg);
       } else {
-          strcpy(msg, "Index out of bounds \n");
+          strcpy(msg, "No such command in history \n");
       }
       return 0;
   } else {
