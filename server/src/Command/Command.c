@@ -127,7 +127,6 @@ int execute(Command* command, char* msg) {
       memcpy(reading, &FALSE, sizeof(int));
       signal(readSignal, NULL);
       return 0;
-
   } else if(strcmp(args[0], "History") == 0) {
       int length = numberOfCommandsInCache;
       if(numberOfCommandsInCache > 9) {

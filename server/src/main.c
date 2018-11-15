@@ -5,7 +5,7 @@
 
 /*Port number and max message size */
 #define MSGSIZE 3000
-#define PORTNUMBER 5177
+#define PORTNUMBER 5184
 
 int main(int argc, char const *argv[])
 {

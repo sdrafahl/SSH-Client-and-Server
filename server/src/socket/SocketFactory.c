@@ -113,9 +113,15 @@ int handleConnections() {
                     lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
                 }
 
+                printf("command %s\n", commands[1]);
                 listOfProcesses[numberOfProcesses] = malloc(strlen(commands[1]) * sizeof(char));
                 strcpy(listOfProcesses[numberOfProcesses], commands[1]);
                 numberOfProcesses++;
+
+                int x=0;
+                for(x=0;x<numberOfProcesses;x++) {
+                    printf("ADD %s\n", listOfProcesses[x]);
+                }
             }
 
             if(strcmp(commands[0],"KILL") == 0) {
@@ -131,9 +137,10 @@ int handleConnections() {
 				free(listOfProcesses[processToDeleteIndex]);
                 for(x=processToDeleteIndex;x<numberOfProcesses;x++) {
                     if(x == numberOfProcesses-1) {
-                        strcpy(listOfProcesses[x], "");
+                        listOfProcesses[x] = NULL;
                     } else {
-                        listOfProcesses[x] = listOfProcesses[x+1];
+                        char* point = listOfProcesses[x+1];
+                        listOfProcesses[x] = point;
                     }
                 }
                 strcpy(messageFromProcess, "");
@@ -144,10 +151,12 @@ int handleConnections() {
             int a;
             for(a=0;a<numberOfProcesses;a++) {
                 strcat(listOfProcessesString, listOfProcesses[a]);
-                strcat(listOfProcessesString, " \n ");
+                if(a+1<numberOfProcesses) {
+                    strcat(listOfProcessesString, "\n");
+                }
             }
             memcpy(writing, &FALSE, sizeof(int));
-			      memcpy(messageToRead, &FALSE, sizeof(int));
+			memcpy(messageToRead, &FALSE, sizeof(int));
             signal(writeSignal, NULL);
         }
 
@@ -195,10 +204,11 @@ int handleConnections() {
               close(sockfd);
               char message[3000];
               if(!sentConnectedMessage) {
-                strcpy(message, "Connected to server....");
+                strcpy(message, "\n");
                 sentConnectedMessage = 1;
               }
               probeSocket(newsockfd, message);
+
               while(1) {
                 /* Checks if there is data */
                 if(poll(&pfd, 1, 100) > 0) {
@@ -242,7 +252,7 @@ int handleConnections() {
                         }
                     }
                     semiColons++;
-                    char* messageToClient = malloc(msgSize * 5 * sizeof(char));
+                    char* messageToClient = malloc(msgSize * sizeof(char));
                     strcpy(messageToClient, "");
                     char* commands[semiColons];
                     tokenize(socketBuffer, ";", commands);
@@ -251,13 +261,16 @@ int handleConnections() {
                         char stdoutFromExec[msgSize];
                         execute(command, stdoutFromExec);
                         strcat(messageToClient, stdoutFromExec);
-                        strcat(messageToClient, "\n");
+                        if(x+1<semiColons) {
+                            strcat(messageToClient, ",");
+                        }
                         if(numberOfCommandsInCache > 9) {
                             freeCommand(commandCache[numberOfCommandsInCache % cacheSize]);
                         }
                         commandCache[numberOfCommandsInCache % cacheSize] = command;
                         numberOfCommandsInCache++;
                     }
+
                     probeSocket(newsockfd, messageToClient);
                     free(messageToClient);
                   }
@@ -282,6 +295,7 @@ int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
     strcpy(message, "Command Complete ");
   }
+  printf("Message before encryption %s\n", message);
   encryptSlide(message);
   int length = strlen(message);
   char numberString[10];

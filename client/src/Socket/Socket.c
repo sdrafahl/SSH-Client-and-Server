@@ -33,16 +33,17 @@ int readFromSocket() {
   if(recv(sock, size, 10, 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
-  decryptSlide(size);
+  decryptSlide(size, strlen(size));
+
   char* message = malloc(sizeof(char) * atoi(size));
   if(!message) {
-      printf("%s\n", "Malloc failed 33 socket.c ");
+      printf("%s\n", "Malloc failed socket.c ");
   }
   /* Secondly reads the message */
   if(recv(sock, message, atoi(size), 0) == -1) {
     printf("recv error: %s \n", strerror(errno));
   }
-  decryptSlide(message);
+  decryptSlide(message, atoi(size));
   printf("shell> %s \n", message);
   fflush(stdout);
   strcpy(message, "");
