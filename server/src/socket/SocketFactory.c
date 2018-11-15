@@ -113,15 +113,9 @@ int handleConnections() {
                     lengthOfProcesses = lengthOfProcesses * lengthOfProcesses;
                 }
 
-                printf("command %s\n", commands[1]);
                 listOfProcesses[numberOfProcesses] = malloc(strlen(commands[1]) * sizeof(char));
                 strcpy(listOfProcesses[numberOfProcesses], commands[1]);
                 numberOfProcesses++;
-
-                int x=0;
-                for(x=0;x<numberOfProcesses;x++) {
-                    printf("ADD %s\n", listOfProcesses[x]);
-                }
             }
 
             if(strcmp(commands[0],"KILL") == 0) {
@@ -256,6 +250,7 @@ int handleConnections() {
                     strcpy(messageToClient, "");
                     char* commands[semiColons];
                     tokenize(socketBuffer, ";", commands);
+
                     for(x = 0;x < semiColons;x++) {
                         Command* command = newCommand(commands[x], msgSize);
                         char stdoutFromExec[msgSize];
@@ -295,7 +290,6 @@ int probeSocket(int socket, char* message) {
   if(message[0] == '\0') {
     strcpy(message, "Command Complete ");
   }
-  printf("Message before encryption %s\n", message);
   encryptSlide(message);
   int length = strlen(message);
   char numberString[10];

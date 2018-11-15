@@ -16,18 +16,30 @@
 int numberOfTokens(char* command);
 
 void removeSpaces(char *str1){
-    char *str2;
-    str2=str1;
-    while (*str2==' ') str2++;
-    if (str2!=str1) memmove(str1,str2,strlen(str2)+1);
-
+    int index1;
     int x;
     for(x=0;x<strlen(str1);x++) {
-        if(str1[x] == ' ') {
-            str1[x] = '\0';
+        if(str1[x] != ' ') {
+            index1 = x;
             break;
         }
     }
+    int index = 0;
+    for(x=0;x<strlen(str1);x++) {
+        if(str1[x] != ' ' && str1[x] != 10 && str1[x] != 32) {
+            index = x;
+        }
+    }
+    printf("index1 %i\n", index1);
+    printf("index %i\n", index);
+    printf("%s\n", str1);
+    int length = strlen(str1);
+    printf("length %i\n", length);
+    char temp[length];
+    strncpy(temp, str1+index1, (index-index1)+1);
+    strcat(temp, "\0");
+    printf("str %s\n", temp);
+    strcpy(str1, temp);
 }
 
 /* Command constructor */
@@ -95,6 +107,7 @@ int execute(Command* command, char* msg) {
     msg[0] = 0;
     return 0;
   }
+
   pipe(fds);
   pipe(errorPipe);
   fcntl(errorPipe[0], F_SETFL, O_NONBLOCK); /*Non Blocking Pipe */
