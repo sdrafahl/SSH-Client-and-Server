@@ -265,7 +265,6 @@ int handleConnections() {
                         commandCache[numberOfCommandsInCache % cacheSize] = command;
                         numberOfCommandsInCache++;
                     }
-
                     probeSocket(newsockfd, messageToClient);
                     free(messageToClient);
                   }

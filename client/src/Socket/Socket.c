@@ -47,6 +47,7 @@ int readFromSocket() {
   printf("shell> %s \n", message);
   fflush(stdout);
   strcpy(message, "");
+  memset(message, '\0', atoi(size));
   free(message);
   return 0;
 }

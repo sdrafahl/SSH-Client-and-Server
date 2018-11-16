@@ -32,6 +32,7 @@ void removeSpaces(char *str1){
     }
     int length = strlen(str1);
     char temp[length];
+    memset(temp, '\0', sizeof(temp));
     strncpy(temp, str1+index1, (index-index1)+1);
     strcat(temp, "\0");
     strcpy(str1, temp);

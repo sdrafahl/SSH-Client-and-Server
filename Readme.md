@@ -1,4 +1,4 @@
-# RSH
+# SSH
 
 This is a basic remote shell and server project. You are able to run commands via terminal to the terminal.
 
@@ -54,5 +54,10 @@ The server will probe the client to see if the connection still remains so after
 
 After a socket is closed the server will print that a socket was closed.
 
-## PORT 5164
-The last four digits of my ID is 0164 but I made it 5164 so you dont have to run the program in kernel mode/sudo.
+## PORT 5184
+The last four digits of my ID is 0164 but I made it 5184 so you dont have to run the program in kernel mode/sudo.
+
+## History Commands 
+Enter ``History`` to view list of commands.
+``!!`` you cannot call this if the previous command was also a ``!!``.
+`!N` where N is between 1 and 10 will call that specific command in the history list.
