@@ -6,7 +6,7 @@
 
 /* Port number to connect to and max message size */
 #define PORT 5184
-#define MSGSIZE 3000
+#define MSGSIZE 3000000
 
 int main() {
     char message[MSGSIZE];

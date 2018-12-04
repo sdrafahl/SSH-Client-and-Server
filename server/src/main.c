@@ -4,7 +4,7 @@
 #include "socket/SocketFactory.h"
 
 /*Port number and max message size */
-#define MSGSIZE 3000
+#define MSGSIZE 3000000
 #define PORTNUMBER 5184
 
 int main(int argc, char const *argv[])
